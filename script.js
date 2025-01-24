@@ -1,10 +1,3 @@
-document.addEventListener('keydown', (event) => {
-  if (event.code === 'Space') {
-    alert('keydown:space!!!')
-    
-  }
-});
-
 const replaceOperStr = (formula) => {
   formula = formula.replace('+', '＋')
   formula = formula.replace('-', '－')
@@ -67,6 +60,15 @@ const generateFormulaList = () => {
   })
   return lines.join('\n')
 }
+
+let clickCount = 0
+document.addEventListener('keydown', (event) => {
+  if (event.code === 'Space') {
+    event.preventDefault(); // Prevent page scrolling
+    document.getElementById(`answer${clickCount}`).click();
+    clickCount++
+  }
+});
 
 const main = () => {
   document.getElementById('formula').innerHTML = generateFormulaList()
