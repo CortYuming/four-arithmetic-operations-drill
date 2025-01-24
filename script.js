@@ -63,6 +63,23 @@ const generateFormulaList = () => {
   return lines.join('\n')
 }
 
+const isElementBelowViewport = (el) => {
+  const rect = el.getBoundingClientRect();
+  return rect.bottom > window.innerHeight;
+}
+
+const scrollToCurrentLine = () => {
+  const currentLine = document.querySelector('.current-line');
+
+  if (currentLine && isElementBelowViewport(currentLine)) { // 画面の下にある場合のみスクロール
+    currentLine.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+      inline: 'nearest'
+    });
+  }
+}
+
 const updateCurrentLine = () =>  {
   const questionLis = document.querySelectorAll('li.question');
 
@@ -81,6 +98,7 @@ const updateCurrentLine = () =>  {
 
   if (firstHiddenAnswerLi) {
     firstHiddenAnswerLi.classList.add('current-line');
+    scrollToCurrentLine()
   }
 }
 
