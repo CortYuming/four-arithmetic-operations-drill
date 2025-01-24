@@ -65,7 +65,7 @@ const generateFormulaList = () => {
 
 let clickCount = 0
 document.addEventListener('keydown', (event) => {
-  if (event.code === 'Space') {
+  if (event.code === 'Enter') {
     event.preventDefault(); // Prevent page scrolling
     document.getElementById(`answer${clickCount}`).click();
     clickCount++
