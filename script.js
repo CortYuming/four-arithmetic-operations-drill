@@ -58,10 +58,32 @@ const generateFormulaList = () => {
   formulaList = formulaList.slice(0, 100);
 
   formulaList.forEach((f, i) => {
-    lines.push(`<li class="question" onclick="displayAnswer('answer${i}')"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" style="display:none;">${eval(f)}</span></span></li>`)
+    lines.push(`<li class="question pl-3" onclick="displayAnswer('answer${i}')"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${eval(f)}</span></span></li>`)
   })
   return lines.join('\n')
 }
+
+const updateCurrentLine = () =>  {
+  const questionLis = document.querySelectorAll('li.question');
+
+   questionLis.forEach(li => {
+    li.classList.remove('current-line');
+  });
+
+  let firstHiddenAnswerLi = null;
+  for (const li of questionLis) {
+    const answer = li.querySelector('.answer');
+    if (answer && answer.style.display === 'none') {
+      firstHiddenAnswerLi = li;
+      break;
+    }
+  }
+
+  if (firstHiddenAnswerLi) {
+    firstHiddenAnswerLi.classList.add('current-line');
+  }
+}
+
 
 const main = () => {
   document.getElementById('formula').innerHTML = generateFormulaList()
@@ -72,10 +94,12 @@ const main = () => {
       event.preventDefault(); // Prevent page scrolling
       document.getElementById(`answer${clickCount}`).click();
       clickCount++
+      updateCurrentLine()
     }
   });
 }
 
 window.onload = function () {
   main()
+  updateCurrentLine()
 }
