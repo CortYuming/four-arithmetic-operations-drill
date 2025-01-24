@@ -58,7 +58,7 @@ const generateFormulaList = () => {
   formulaList = formulaList.slice(0, 100);
 
   formulaList.forEach((f, i) => {
-    lines.push(`<li class="question pl-3" onclick="displayAnswer('answer${i}')"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${eval(f)}</span></span></li>`)
+    lines.push(`<li class="question pl-3"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${eval(f)}</span></span></li>`)
   })
   return lines.join('\n')
 }
@@ -109,8 +109,7 @@ const main = () => {
   let clickCount = 0
   document.addEventListener('keydown', (event) => {
     if (event.code === 'Enter') {
-      event.preventDefault(); // Prevent page scrolling
-      document.getElementById(`answer${clickCount}`).click();
+      displayAnswer(`answer${clickCount}`)
       clickCount++
       updateCurrentLine()
     }
