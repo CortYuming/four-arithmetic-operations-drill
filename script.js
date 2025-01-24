@@ -18,6 +18,18 @@ const displayAnswer = (id) =>{ // eslint-disable-line no-unused-vars
   element.style.display = 'inline';
 }
 
+const shuffle = (array) => {
+  let currentIndex = array.length
+  let randomIndex = 0;
+
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
+
 const createSumFormula = (min, max) => {
   const formula = [];
   for (let i = min; i <= max; i++) {
@@ -29,7 +41,9 @@ const createSumFormula = (min, max) => {
 }
 
 const generateFormulaList = () => {
-  const formulaList = createSumFormula(1, 30).slice(0, 100);
+  let formulaList = createSumFormula(1, 30)
+  formulaList = shuffle(formulaList)
+  formulaList = formulaList.slice(0, 100);
   let lines = []
 
   formulaList.forEach((f, i) => {
