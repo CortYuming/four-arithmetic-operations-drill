@@ -18,13 +18,18 @@ const displayAnswer = (id) =>{ // eslint-disable-line no-unused-vars
   element.style.display = 'inline';
 }
 
+const createSumFormula = (min, max) => {
+  const formula = [];
+  for (let i = min; i <= max; i++) {
+    for (let j = min; j <= max; j++) {
+      formula.push(`${i}+${j}`);
+    }
+  }
+  return formula;
+}
+
 const generateFormulaList = () => {
-  const formulaList = [ // TODO: 表示確認用なのであとで差し替える
-    '1+1',
-    '2+3',
-    '4*5',
-    '12/6',
-  ]
+  const formulaList = createSumFormula(1, 30).slice(0, 100);
   let lines = []
 
   formulaList.forEach((f, i) => {
