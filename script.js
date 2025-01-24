@@ -40,11 +40,27 @@ const createSumFormula = (min, max) => {
   return formula;
 }
 
+const createSubFormula = (min, max) => {
+  const sums = new Set();
+  for (let i = min; i <= max; i++) {
+    for (let j = min; j <= max; j++) {
+      sums.add(`${i}-${j}`);
+    }
+  }
+  return Array.from(sums).sort((a, b) => a - b);
+}
+
 const generateFormulaList = () => {
-  let formulaList = createSumFormula(1, 30)
+  const MIN = 1
+  const MAX = 30
+  let formulaList = []
+  let lines = []
+
+  const sumFormulaList = createSumFormula(MIN, MAX)
+  const subFormulaList = createSubFormula(MIN, MAX)
+  formulaList = sumFormulaList.concat(subFormulaList)
   formulaList = shuffle(formulaList)
   formulaList = formulaList.slice(0, 100);
-  let lines = []
 
   formulaList.forEach((f, i) => {
     lines.push(`<li class="question" onclick="displayAnswer('answer${i}')"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" style="display:none;">${eval(f)}</span></span></li>`)
