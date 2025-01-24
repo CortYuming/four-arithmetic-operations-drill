@@ -34,13 +34,15 @@ const createSumFormula = (min, max) => {
 }
 
 const createSubFormula = (min, max) => {
-  const sums = new Set();
+ const result = [];
   for (let i = min; i <= max; i++) {
-    for (let j = min; j <= max; j++) {
-      sums.add(`${i}-${j}`);
+    for (let j = min + 1; j <= max; j++) {
+      if (i > j) {
+        result.push(`${i}-${j}`);
+      }
     }
   }
-  return Array.from(sums).sort((a, b) => a - b);
+  return result;
 }
 
 const generateFormulaList = () => {
