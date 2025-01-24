@@ -63,17 +63,17 @@ const generateFormulaList = () => {
   return lines.join('\n')
 }
 
-let clickCount = 0
-document.addEventListener('keydown', (event) => {
-  if (event.code === 'Enter') {
-    event.preventDefault(); // Prevent page scrolling
-    document.getElementById(`answer${clickCount}`).click();
-    clickCount++
-  }
-});
-
 const main = () => {
   document.getElementById('formula').innerHTML = generateFormulaList()
+
+  let clickCount = 0
+  document.addEventListener('keydown', (event) => {
+    if (event.code === 'Enter') {
+      event.preventDefault(); // Prevent page scrolling
+      document.getElementById(`answer${clickCount}`).click();
+      clickCount++
+    }
+  });
 }
 
 window.onload = function () {
