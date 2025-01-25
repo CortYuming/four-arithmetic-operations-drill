@@ -24,13 +24,13 @@ const shuffle = (array) => {
 }
 
 const createSumFormula = (min, max) => {
-  const formula = [];
+  const result = [];
   for (let i = min; i <= max; i++) {
     for (let j = min; j <= max; j++) {
-      formula.push(`${i}+${j}`);
+      result.push(`${i}+${j}`);
     }
   }
-  return formula;
+  return result;
 }
 
 const createSubFormula = (min, max) => {
