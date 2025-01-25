@@ -45,6 +45,16 @@ const createSubFormula = (min, max) => {
   return result;
 }
 
+const createKukuFormula = (min, max) => {
+  const result = [];
+  for (let i = min; i <= max; i++) {
+    for (let j = min; j <= max; j++) {
+      result.push(`${i}*${j}`);
+    }
+  }
+  return result;
+}
+
 const generateFormulaList = () => {
   const MIN = 1
   const MAX = 30
@@ -53,7 +63,8 @@ const generateFormulaList = () => {
 
   const sumFormulaList = createSumFormula(MIN, MAX)
   const subFormulaList = createSubFormula(MIN, MAX)
-  formulaList = sumFormulaList.concat(subFormulaList)
+  const kukuFormula = createKukuFormula(2, 10)
+  formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula)
   formulaList = shuffle(formulaList)
   formulaList = formulaList.slice(0, 100);
 
