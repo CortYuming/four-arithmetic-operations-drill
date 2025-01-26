@@ -61,9 +61,10 @@ const generateFormulaList = () => {
   let formulaList = []
   let lines = []
 
-  const sumFormulaList = createSumFormula(MIN, MAX)
-  const subFormulaList = createSubFormula(MIN, MAX)
-  const kukuFormula = createKukuFormula(2, 10)
+  const amount = 34
+  const sumFormulaList =shuffle( createSumFormula(MIN, MAX)).slice(0, amount)
+  const subFormulaList = createSubFormula(MIN, MAX).slice(0, amount)
+  const kukuFormula = createKukuFormula(2, 10).slice(0, amount)
   formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula)
   formulaList = shuffle(formulaList)
   formulaList = formulaList.slice(0, 100);
