@@ -55,6 +55,19 @@ const createKukuFormula = (min, max) => {
   return result;
 }
 
+const createDivFormula = (min, max) => {
+  const result = [];
+  for (let dividend = min; dividend <= max; dividend++) {
+    for (let divisor = min; divisor <= max; divisor++) {
+      if (divisor !== 0 && dividend % divisor === 0) {
+        result.push(`${dividend}/${divisor}`);
+      }
+    }
+  }
+
+  return result;
+}
+
 const generateFormulaList = () => {
   const MIN = 1
   const MAX = 30
@@ -62,10 +75,13 @@ const generateFormulaList = () => {
   let lines = []
 
   const amount = 34
-  const sumFormulaList =shuffle( createSumFormula(MIN, MAX)).slice(0, amount)
+  const sumFormulaList =shuffle(createSumFormula(MIN, MAX)).slice(0, amount)
   const subFormulaList = createSubFormula(MIN, MAX).slice(0, amount)
-  const kukuFormula = createKukuFormula(2, 10).slice(0, amount)
-  formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula)
+  const kukuAmount = amount/3*2
+  const divAmount = amount - kukuAmount
+  const kukuFormula = shuffle(createKukuFormula(2, 10)).slice(0, kukuAmount)
+  const divFormulaList = shuffle(createDivFormula(2, 81)).slice(0, divAmount)
+  formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula).concat(divFormulaList)
   formulaList = shuffle(formulaList)
   formulaList = formulaList.slice(0, 100);
 
