@@ -59,7 +59,7 @@ const createDivFormula = (min, max) => {
   const result = [];
   for (let dividend = min; dividend <= max; dividend++) {
     for (let divisor = min; divisor <= max; divisor++) {
-      if (divisor !== 0 && dividend % divisor === 0) {
+      if (divisor !== 0 && dividend % divisor === 0 && dividend !== divisor) {
         result.push(`${dividend}/${divisor}`);
       }
     }
