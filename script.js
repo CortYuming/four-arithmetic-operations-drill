@@ -130,16 +130,61 @@ const updateCurrentLine = () =>  {
   }
 }
 
+const countdownTimer = ()  => {
+  const timerDisplay = document.getElementById('timer');
+  const startButton = document.getElementById('startButton');
+  let timerInterval;
+  let timeLeft = 60 * 2;
+
+  function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+
+    timerDisplay.textContent = `${String(minutes).padStart(1, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function startTimer() {
+    const content = document.querySelector('.content');
+
+    content.classList.remove('hide');
+    startButton.disabled = true;
+    clearInterval(timerInterval);
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        content.classList.add('disabled');
+      }
+    }, 1000);
+  }
+
+  startButton.addEventListener('click', startTimer);
+  updateTimerDisplay();
+}
+
 
 const main = () => {
-  document.getElementById('formula').innerHTML = generateFormulaList()
-
   let clickCount = 0
+
+  document.getElementById('formula').innerHTML = generateFormulaList()
+  countdownTimer();
+
   document.addEventListener('keydown', (event) => {
+    const startButton = document.getElementById('startButton');
+    const isHide = document.querySelector('.content')?.classList.contains('hide');
+
     if (event.code === 'Enter') {
-      displayAnswer(`answer${clickCount}`)
-      clickCount++
-      updateCurrentLine()
+      if (!startButton.disabled && isHide) {
+        document.getElementById('startButton').click();
+      } else if (startButton.disabled) {
+        displayAnswer(`answer${clickCount}`)
+        clickCount++
+        updateCurrentLine()
+      }
     }
   });
 }

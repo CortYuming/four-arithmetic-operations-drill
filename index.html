@@ -8,11 +8,19 @@
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+      <div class="navbar-start">
+        <div id="timer" class="navbar-item"></div>
+        <div class="buttons">
+          <button id="startButton" class="button is-primary">START</button>
+        </div>
+      </div>
+    </nav>
     <section class="section">
       <div class="container">
         <h1 class="title has-text-grey-lighter has-text-centered">四則演算100問ドリル</h1>
 
-        <div class="content">
+        <div class="content hide">
           <ol id="formula"></ol>
         </div>
       </div>
