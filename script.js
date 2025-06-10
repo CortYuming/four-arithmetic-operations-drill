@@ -166,6 +166,57 @@ const countdownTimer = ()  => {
   updateTimerDisplay();
 }
 
+function enableScreenInteraction() {
+    // 画面全体を対象とするため、document.body 要素を取得
+    const targetElement = document.body; 
+
+    if (targetElement) {
+        // --- タッチデバイス（スマートフォン、タブレットなど）向けのイベント ---
+        // 指を画面から離したときに発生する 'touchend' イベントを監視
+        targetElement.addEventListener('touchend', function(event) {
+            console.log('画面がタッチされました (touchend)。');
+            // イベントの重複を防ぐためのチェック:
+            // pointerType が 'touch' で、かつブラウザが click イベントも同時に発生させる場合を考慮
+            // (通常、touchend の後に少し遅れて click イベントが発生することがあるため)
+            if (event.pointerType === 'touch' && event.type === 'click') {
+                return; // 既に click で処理されるか、重複を避けるためにスキップ
+            }
+            performDesiredAction(event);
+        });
+
+        // --- マウス操作（PCなど）向けのイベント ---
+        // マウスボタンを離したときに発生する 'click' イベントを監視
+        targetElement.addEventListener('click', function(event) {
+            console.log('画面がクリックされました (click)。');
+            performDesiredAction(event);
+        });
+    }
+}
+
+function performDesiredAction() {
+    // EnterキーのKeyboardEventを作成し、発火させる
+    // 注意点:
+    // ブラウザのセキュリティ上の制約により、JavaScriptから強制的にキーイベントを発火させることは
+    // 常に意図した通りに動作するとは限りません。特に、ユーザーの明確な操作を伴わない
+    // 自動的なキーイベントの発火は、ブラウザによって制限されたり無視されたりする場合があります。
+    const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',      // キーの識別子 (例: "Enter", "a", "Escape")
+        code: 'Enter',     // 物理的なキーコード (例: "Enter", "KeyA")
+        keyCode: 13,       // 非推奨だが互換性のため (EnterキーのkeyCode)
+        which: 13,         // 非推奨だが互換性のため
+        bubbles: true,     // イベントがDOMツリーをバブルアップ（親要素へ伝播）するか
+        cancelable: true   // イベントがキャンセル可能か (preventDefault() でデフォルト動作を抑制できるか)
+    });
+
+    // 現在フォーカスされている要素に対してイベントを発火させることが最も一般的です。
+    // 例: テキスト入力フィールドがフォーカスされている場合、そこでEnterキーが押されたかのような挙動になります。
+    if (document.activeElement) {
+        document.activeElement.dispatchEvent(enterEvent);
+        console.log('Enterキーイベントを発火しました。');
+    } else {
+        console.log('フォーカスされている要素がないため、Enterキーイベントを発火できませんでした。');
+    }
+}
 
 const main = () => {
   let clickCount = 0
@@ -187,9 +238,12 @@ const main = () => {
       }
     }
   });
+
 }
 
 window.onload = function () {
   main()
   updateCurrentLine()
 }
+
+document.addEventListener('DOMContentLoaded', enableScreenInteraction);
