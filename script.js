@@ -167,33 +167,30 @@ const countdownTimer = ()  => {
 }
 
 function enableScreenInteraction() {
-    // 画面全体を対象とするため、document.body 要素を取得
-    const targetElement = document.body; 
+    const targetElement = document.body; // 画面全体を対象とする
 
     if (targetElement) {
-        // --- タッチデバイス（スマートフォン、タブレットなど）向けのイベント ---
-        // 指を画面から離したときに発生する 'touchend' イベントを監視
-        targetElement.addEventListener('touchend', function(event) {
-            console.log('画面がタッチされました (touchend)。');
-            // イベントの重複を防ぐためのチェック:
-            // pointerType が 'touch' で、かつブラウザが click イベントも同時に発生させる場合を考慮
-            // (通常、touchend の後に少し遅れて click イベントが発生することがあるため)
-            if (event.pointerType === 'touch' && event.type === 'click') {
-                return; // 既に click で処理されるか、重複を避けるためにスキップ
-            }
-            performDesiredAction(event);
-        });
+        // pointerup イベントを使用: マウス、タッチ、ペン操作の終了を検知
+        // これ一つで touchend と click の重複を避けることができます。
+        targetElement.addEventListener('pointerup', function(event) {
+            console.log('画面がポインターアップされました (pointerType: ' + event.pointerType + ')。');
 
-        // --- マウス操作（PCなど）向けのイベント ---
-        // マウスボタンを離したときに発生する 'click' イベントを監視
-        targetElement.addEventListener('click', function(event) {
-            console.log('画面がクリックされました (click)。');
+            // 必要に応じて、イベントのデフォルト動作をキャンセル
+            // event.preventDefault(); 
+            // 注意: これを有効にすると、画面内の他のリンクやボタンのクリックも無効になる可能性があります。
+            // 慎重に検討してください。
+
             performDesiredAction(event);
         });
     }
 }
 
-function performDesiredAction() {
+/**
+ * 画面がタッチまたはクリックされたときに実行したい処理
+ * ここではEnterキーの押下をシミュレートする例
+ * @param {PointerEvent} originalEvent - 元のポインターイベントオブジェクト
+ */
+function performDesiredAction(originalEvent) {
     // EnterキーのKeyboardEventを作成し、発火させる
     // 注意点:
     // ブラウザのセキュリティ上の制約により、JavaScriptから強制的にキーイベントを発火させることは
