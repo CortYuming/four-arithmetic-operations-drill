@@ -180,7 +180,7 @@ function enableScreenInteraction() {
 }
 
 // Enterキーの押下をシミュレート
-function performDesiredAction(originalEvent) {
+function performDesiredAction() {
     const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         code: 'Enter',
