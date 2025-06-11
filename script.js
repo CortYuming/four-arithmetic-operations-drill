@@ -36,7 +36,7 @@ const createSumFormula = (min, max) => {
 const createSubFormula = (min, max) => {
  const result = [];
   for (let i = min; i <= max; i++) {
-    for (let j = min + 1; j <= max; j++) {
+    for (let j = min; j <= max; j++) {
       if (i > j) {
         result.push(`${i}-${j}`);
       }
