@@ -194,51 +194,30 @@ const countdownTimer = ()  => {
 }
 
 function enableScreenInteraction() {
-    const targetElement = document.body; // 画面全体を対象とする
-
+    const targetElement = document.body;
     if (targetElement) {
-        // pointerup イベントを使用: マウス、タッチ、ペン操作の終了を検知
-        // これ一つで touchend と click の重複を避けることができます。
+        // pointerupイベントでタッチ・クリック・ペン操作を検知
         targetElement.addEventListener('pointerup', function(event) {
-            console.log('画面がポインターアップされました (pointerType: ' + event.pointerType + ')。');
-
-            // 必要に応じて、イベントのデフォルト動作をキャンセル
-            // event.preventDefault(); 
-            // 注意: これを有効にすると、画面内の他のリンクやボタンのクリックも無効になる可能性があります。
-            // 慎重に検討してください。
-
             performDesiredAction(event);
         });
     }
 }
 
 /**
- * 画面がタッチまたはクリックされたときに実行したい処理
- * ここではEnterキーの押下をシミュレートする例
- * @param {PointerEvent} originalEvent - 元のポインターイベントオブジェクト
+ * 画面がタッチまたはクリックされたときの処理
+ * Enterキーの押下をシミュレート
  */
 function performDesiredAction(originalEvent) {
-    // EnterキーのKeyboardEventを作成し、発火させる
-    // 注意点:
-    // ブラウザのセキュリティ上の制約により、JavaScriptから強制的にキーイベントを発火させることは
-    // 常に意図した通りに動作するとは限りません。特に、ユーザーの明確な操作を伴わない
-    // 自動的なキーイベントの発火は、ブラウザによって制限されたり無視されたりする場合があります。
     const enterEvent = new KeyboardEvent('keydown', {
-        key: 'Enter',      // キーの識別子 (例: "Enter", "a", "Escape")
-        code: 'Enter',     // 物理的なキーコード (例: "Enter", "KeyA")
-        keyCode: 13,       // 非推奨だが互換性のため (EnterキーのkeyCode)
-        which: 13,         // 非推奨だが互換性のため
-        bubbles: true,     // イベントがDOMツリーをバブルアップ（親要素へ伝播）するか
-        cancelable: true   // イベントがキャンセル可能か (preventDefault() でデフォルト動作を抑制できるか)
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13, // 非推奨だが互換性のため
+        which: 13,   // 非推奨だが互換性のため
+        bubbles: true,
+        cancelable: true
     });
-
-    // 現在フォーカスされている要素に対してイベントを発火させることが最も一般的です。
-    // 例: テキスト入力フィールドがフォーカスされている場合、そこでEnterキーが押されたかのような挙動になります。
     if (document.activeElement) {
         document.activeElement.dispatchEvent(enterEvent);
-        console.log('Enterキーイベントを発火しました。');
-    } else {
-        console.log('フォーカスされている要素がないため、Enterキーイベントを発火できませんでした。');
     }
 }
 
