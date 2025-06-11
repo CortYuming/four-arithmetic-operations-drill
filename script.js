@@ -68,6 +68,27 @@ const createDivFormula = (min, max) => {
   return result;
 }
 
+// 四則演算のみ対応の安全な計算関数
+function safeEval(formula) {
+  // 許可するパターン: 数字, +, -, *, /, 空白
+  if (!/^\d+[+\-*/]\d+$/.test(formula)) {
+    return '';
+  }
+  // 分解
+  const match = formula.match(/(\d+)([+\-*/])(\d+)/);
+  if (!match) return '';
+  const a = Number(match[1]);
+  const op = match[2];
+  const b = Number(match[3]);
+  switch (op) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/': return b !== 0 ? a / b : '';
+    default: return '';
+  }
+}
+
 const generateFormulaList = () => {
   const MIN = 1
   const MAX = 30
@@ -86,7 +107,7 @@ const generateFormulaList = () => {
   formulaList = formulaList.slice(0, 100);
 
   formulaList.forEach((f, i) => {
-    lines.push(`<li class="question pl-3"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${eval(f)}</span></span></li>`)
+    lines.push(`<li class="question pl-3"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${safeEval(f)}</span></span></li>`)
   })
   return lines.join('\n')
 }
