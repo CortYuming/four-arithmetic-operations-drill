@@ -6,13 +6,13 @@ const replaceOperStr = (formula) => {
     .replace(/\//g, '÷');
 }
 
-const displayAnswer = (id) =>{ // eslint-disable-line no-unused-vars
+const displayAnswer = (id) => {
   const element = document.getElementById(id);
   element.style.display = 'inline';
 }
 
 const shuffle = (array) => {
-  let currentIndex = array.length
+  let currentIndex = array.length;
   let randomIndex = 0;
 
   while (currentIndex !== 0) {
@@ -169,20 +169,17 @@ const countdownTimer = ()  => {
   updateTimerDisplay();
 }
 
+// 画面タッチ・クリック時にEnterキーをシミュレート
 function enableScreenInteraction() {
     const targetElement = document.body;
     if (targetElement) {
-        // pointerupイベントでタッチ・クリック・ペン操作を検知
         targetElement.addEventListener('pointerup', function(event) {
             performDesiredAction(event);
         });
     }
 }
 
-/**
- * 画面がタッチまたはクリックされたときの処理
- * Enterキーの押下をシミュレート
- */
+// Enterキーの押下をシミュレート
 function performDesiredAction(originalEvent) {
     const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
