@@ -23,49 +23,25 @@ const shuffle = (array) => {
   return array;
 }
 
-const createSumFormula = (min, max) => {
+// 汎用的な式生成関数
+const createFormula = (min, max, operator, filterFn = () => true) => {
   const result = [];
   for (let i = min; i <= max; i++) {
     for (let j = min; j <= max; j++) {
-      result.push(`${i}+${j}`);
-    }
-  }
-  return result;
-}
-
-const createSubFormula = (min, max) => {
- const result = [];
-  for (let i = min; i <= max; i++) {
-    for (let j = min; j <= max; j++) {
-      if (i > j) {
-        result.push(`${i}-${j}`);
+      if (filterFn(i, j)) {
+        result.push(`${i}${operator}${j}`);
       }
     }
   }
   return result;
 }
 
-const createKukuFormula = (min, max) => {
-  const result = [];
-  for (let i = min; i <= max; i++) {
-    for (let j = min; j <= max; j++) {
-      result.push(`${i}*${j}`);
-    }
-  }
-  return result;
-}
-
+const createSumFormula = (min, max) => createFormula(min, max, '+');
+const createSubFormula = (min, max) => createFormula(min, max, '-', (i, j) => i > j);
+const createKukuFormula = (min, max) => createFormula(min, max, '*');
 const createDivFormula = (min, max) => {
-  const result = [];
-  for (let dividend = min; dividend <= max; dividend++) {
-    for (let divisor = min; divisor <= max; divisor++) {
-      if (divisor !== 0 && dividend % divisor === 0 && dividend !== divisor) {
-        result.push(`${dividend}/${divisor}`);
-      }
-    }
-  }
-
-  return result;
+  const filterFn = (dividend, divisor) => divisor !== 0 && dividend % divisor === 0 && dividend !== divisor;
+  return createFormula(min, max, '/', filterFn);
 }
 
 // 四則演算のみ対応の安全な計算関数
