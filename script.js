@@ -89,27 +89,33 @@ function safeEval(formula) {
   }
 }
 
-const generateFormulaList = () => {
-  const MIN = 1
-  const MAX = 30
-  let formulaList = []
-  let lines = []
+const FORMULA_AMOUNT = 34;
+const KUKU_MIN = 2;
+const KUKU_MAX = 10;
+const DIV_MIN = 2;
+const DIV_MAX = 81;
+const QUESTION_MAX = 100;
 
-  const amount = 34
-  const sumFormulaList =shuffle(createSumFormula(MIN, MAX)).slice(0, amount)
-  const subFormulaList = createSubFormula(MIN, MAX).slice(0, amount)
-  const kukuAmount = amount/3*2
-  const divAmount = amount - kukuAmount
-  const kukuFormula = shuffle(createKukuFormula(2, 10)).slice(0, kukuAmount)
-  const divFormulaList = shuffle(createDivFormula(2, 81)).slice(0, divAmount)
-  formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula).concat(divFormulaList)
-  formulaList = shuffle(formulaList)
-  formulaList = formulaList.slice(0, 100);
+const generateFormulaList = () => {
+  const MIN = 1;
+  const MAX = 30;
+  let formulaList = [];
+  let lines = [];
+
+  const sumFormulaList = shuffle(createSumFormula(MIN, MAX)).slice(0, FORMULA_AMOUNT);
+  const subFormulaList = createSubFormula(MIN, MAX).slice(0, FORMULA_AMOUNT);
+  const kukuAmount = Math.floor(FORMULA_AMOUNT / 3 * 2);
+  const divAmount = FORMULA_AMOUNT - kukuAmount;
+  const kukuFormula = shuffle(createKukuFormula(KUKU_MIN, KUKU_MAX)).slice(0, kukuAmount);
+  const divFormulaList = shuffle(createDivFormula(DIV_MIN, DIV_MAX)).slice(0, divAmount);
+  formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula).concat(divFormulaList);
+  formulaList = shuffle(formulaList);
+  formulaList = formulaList.slice(0, QUESTION_MAX);
 
   formulaList.forEach((f, i) => {
     lines.push(`<li class="question pl-3"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${safeEval(f)}</span></span></li>`)
-  })
-  return lines.join('\n')
+  });
+  return lines.join('\n');
 }
 
 const isElementBelowViewport = (el) => {
