@@ -237,9 +237,9 @@ function performDesiredAction(originalEvent) {
 }
 
 const main = () => {
-  let clickCount = 0
+  let clickCount = 0;
 
-  document.getElementById('formula').innerHTML = generateFormulaList()
+  document.getElementById('formula').innerHTML = generateFormulaList();
   countdownTimer();
 
   document.addEventListener('keydown', (event) => {
@@ -250,13 +250,12 @@ const main = () => {
       if (!startButton.disabled && isHide) {
         document.getElementById('startButton').click();
       } else if (startButton.disabled) {
-        displayAnswer(`answer${clickCount}`)
-        clickCount++
-        updateCurrentLine()
+        displayAnswer(`answer${clickCount}`);
+        clickCount++;
+        updateCurrentLine();
       }
     }
   });
-
 }
 
 window.onload = function () {
