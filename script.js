@@ -219,9 +219,8 @@ const main = () => {
   });
 }
 
-window.onload = function () {
-  main()
-  updateCurrentLine()
-}
-
-document.addEventListener('DOMContentLoaded', enableScreenInteraction);
+document.addEventListener('DOMContentLoaded', () => {
+  main();
+  updateCurrentLine();
+  enableScreenInteraction();
+});
