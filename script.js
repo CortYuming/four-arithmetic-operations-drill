@@ -1,9 +1,9 @@
 const replaceOperStr = (formula) => {
-  formula = formula.replace('+', '＋')
-  formula = formula.replace('-', '－')
-  formula = formula.replace('*', '×')
-  formula = formula.replace('/', '÷')
   return formula
+    .replace(/\+/g, '＋')
+    .replace(/-/g, '－')
+    .replace(/\*/g, '×')
+    .replace(/\//g, '÷');
 }
 
 const displayAnswer = (id) =>{ // eslint-disable-line no-unused-vars
