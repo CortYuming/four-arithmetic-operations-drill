@@ -133,22 +133,20 @@ const updateCurrentLine = () =>  {
   }
 }
 
+let timerInterval;
+let timeLeft = 60 * 2; // 2 min
 const countdownTimer = ()  => {
   const timerDisplay = document.getElementById('timer');
   const startButton = document.getElementById('startButton');
-  let timerInterval;
-  let timeLeft = 60 * 2;
 
   function updateTimerDisplay() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-
     timerDisplay.textContent = `${String(minutes).padStart(1, '0')}:${String(seconds).padStart(2, '0')}`;
   }
 
   function startTimer() {
     const content = document.querySelector('.content');
-
     content.classList.remove('hide');
     startButton.disabled = true;
     clearInterval(timerInterval);
@@ -211,6 +209,15 @@ const main = () => {
         displayAnswer(`answer${clickCount}`);
         clickCount++;
         updateCurrentLine();
+
+        // 全問終了判定
+        if (clickCount >= QUESTION_MAX) {
+          clearInterval(timerInterval);
+          setTimeout(() => {
+            window.alert('🎉全問完了しました！お疲れさまでした。🎉');
+            document.querySelector('.content').classList.add('disabled');
+          }, 100); // 少し遅延して最後の答えが表示されるように
+        }
       }
     }
   });
