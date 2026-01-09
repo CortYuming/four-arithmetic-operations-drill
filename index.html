@@ -1,5 +1,5 @@
 <!doctype html>
-<html data-theme="light">
+<html lang="ja">
   <head>
     <title>四則演算100問ドリル</title>
     <meta charset="utf-8">
@@ -8,11 +8,22 @@
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
-    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="メインナビゲーション">
       <div class="navbar-start">
-        <div id="timer" class="navbar-item"></div>
+        <div
+          id="timer"
+          class="navbar-item"
+          role="timer"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-label="残り時間"
+        ></div>
         <div class="buttons">
-          <button id="startButton" class="button is-primary">START</button>
+          <button
+            id="startButton"
+            class="button is-primary"
+            aria-label="ドリルを開始する"
+          >START</button>
         </div>
       </div>
     </nav>
@@ -20,8 +31,8 @@
       <div class="container">
         <h1 class="title has-text-grey-lighter has-text-centered">四則演算100問ドリル</h1>
 
-        <div class="content hide">
-          <ol id="formula"></ol>
+        <div class="content hide" role="main" aria-label="問題リスト">
+          <ol id="formula" aria-label="100問の四則演算問題"></ol>
         </div>
       </div>
     </section>

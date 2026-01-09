@@ -1,7 +1,22 @@
-.current-line {
-  background-color: #ffff66;
+/* ====================
+   CSS Custom Properties
+   ==================== */
+:root {
+  --color-highlight: #ffff66;
+  --color-overlay: #ffffff;
+  --overlay-opacity: 0.8;
 }
 
+/* ====================
+   現在の問題行ハイライト
+   ==================== */
+.current-line {
+  background-color: var(--color-highlight);
+}
+
+/* ====================
+   コンテンツ無効化オーバーレイ
+   ==================== */
 .content.disabled {
   position: relative;
 }
@@ -14,11 +29,14 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #ffffff;
-  opacity: 0.8;
+  background-color: var(--color-overlay);
+  opacity: var(--overlay-opacity);
   pointer-events: none;
 }
 
+/* ====================
+   コンテンツ非表示
+   ==================== */
 .content.hide {
   display: none;
 }

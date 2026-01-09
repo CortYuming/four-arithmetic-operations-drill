@@ -1,29 +1,77 @@
+// ====================
+// 設定
+// ====================
+const CONFIG = {
+  timer: {
+    initialSeconds: 120, // 2分
+  },
+  formula: {
+    questionMax: 100,
+    amount: 34,
+    sum: { min: 1, max: 30 },
+    sub: { min: 1, max: 30 },
+    kuku: { min: 2, max: 10 },
+    div: { min: 2, max: 81 },
+  },
+};
+
+// ====================
+// ユーティリティ関数
+// ====================
+
+/**
+ * 演算子を全角文字に変換
+ */
 const replaceOperStr = (formula) => {
   return formula
     .replace(/\+/g, '＋')
     .replace(/-/g, '－')
     .replace(/\*/g, '×')
     .replace(/\//g, '÷');
-}
+};
 
-const displayAnswer = (id) => {
-  const element = document.getElementById(id);
-  element.style.display = 'inline';
-}
-
+/**
+ * Fisher-Yates シャッフルアルゴリズム
+ */
 const shuffle = (array) => {
-  let currentIndex = array.length;
-  let randomIndex = 0;
-
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
   }
-  return array;
-}
+  return result;
+};
 
-// 汎用的な式生成関数
+/**
+ * 四則演算のみ対応の安全な計算関数
+ */
+const safeEval = (formula) => {
+  if (!/^\d+[+\-*/]\d+$/.test(formula)) {
+    return '';
+  }
+  const match = formula.match(/(\d+)([+\-*/])(\d+)/);
+  if (!match) return '';
+
+  const a = Number(match[1]);
+  const op = match[2];
+  const b = Number(match[3]);
+
+  switch (op) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/': return b !== 0 ? a / b : '';
+    default: return '';
+  }
+};
+
+// ====================
+// 式生成
+// ====================
+
+/**
+ * 汎用的な式生成関数
+ */
 const createFormula = (min, max, operator, filterFn = () => true) => {
   const result = [];
   for (let i = min; i <= max; i++) {
@@ -34,197 +82,237 @@ const createFormula = (min, max, operator, filterFn = () => true) => {
     }
   }
   return result;
-}
+};
 
 const createSumFormula = (min, max) => createFormula(min, max, '+');
 const createSubFormula = (min, max) => createFormula(min, max, '-', (i, j) => i > j);
 const createKukuFormula = (min, max) => createFormula(min, max, '*');
 const createDivFormula = (min, max) => {
-  const filterFn = (dividend, divisor) => divisor !== 0 && dividend % divisor === 0 && dividend !== divisor;
+  const filterFn = (dividend, divisor) =>
+    divisor !== 0 && dividend % divisor === 0 && dividend !== divisor;
   return createFormula(min, max, '/', filterFn);
-}
+};
 
-// 四則演算のみ対応の安全な計算関数
-function safeEval(formula) {
-  // 許可するパターン: 数字, +, -, *, /, 空白
-  if (!/^\d+[+\-*/]\d+$/.test(formula)) {
-    return '';
-  }
-  // 分解
-  const match = formula.match(/(\d+)([+\-*/])(\d+)/);
-  if (!match) return '';
-  const a = Number(match[1]);
-  const op = match[2];
-  const b = Number(match[3]);
-  switch (op) {
-    case '+': return a + b;
-    case '-': return a - b;
-    case '*': return a * b;
-    case '/': return b !== 0 ? a / b : '';
-    default: return '';
-  }
-}
-
-const FORMULA_AMOUNT = 34;
-const KUKU_MIN = 2;
-const KUKU_MAX = 10;
-const DIV_MIN = 2;
-const DIV_MAX = 81;
-const QUESTION_MAX = 100;
-
+/**
+ * 問題リストのHTML生成
+ */
 const generateFormulaList = () => {
-  const MIN = 1;
-  const MAX = 30;
-  let formulaList = [];
-  let lines = [];
+  const { sum, sub, kuku, div, amount, questionMax } = CONFIG.formula;
 
-  const sumFormulaList = shuffle(createSumFormula(MIN, MAX)).slice(0, FORMULA_AMOUNT);
-  const subFormulaList = createSubFormula(MIN, MAX).slice(0, FORMULA_AMOUNT);
-  const kukuAmount = Math.floor(FORMULA_AMOUNT / 3 * 2);
-  const divAmount = FORMULA_AMOUNT - kukuAmount;
-  const kukuFormula = shuffle(createKukuFormula(KUKU_MIN, KUKU_MAX)).slice(0, kukuAmount);
-  const divFormulaList = shuffle(createDivFormula(DIV_MIN, DIV_MAX)).slice(0, divAmount);
-  formulaList = sumFormulaList.concat(subFormulaList).concat(kukuFormula).concat(divFormulaList);
-  formulaList = shuffle(formulaList);
-  formulaList = formulaList.slice(0, QUESTION_MAX);
+  const kukuAmount = Math.floor(amount / 3 * 2);
+  const divAmount = amount - kukuAmount;
 
-  formulaList.forEach((f, i) => {
-    lines.push(`<li class="question pl-3"><span class="is-size-2 has-text-weight-bold">${replaceOperStr(f)}=<span id="answer${i}" class="answer" style="display:none;">${safeEval(f)}</span></span></li>`)
-  });
-  return lines.join('\n');
-}
+  const formulaList = shuffle([
+    ...shuffle(createSumFormula(sum.min, sum.max)).slice(0, amount),
+    ...createSubFormula(sub.min, sub.max).slice(0, amount),
+    ...shuffle(createKukuFormula(kuku.min, kuku.max)).slice(0, kukuAmount),
+    ...shuffle(createDivFormula(div.min, div.max)).slice(0, divAmount),
+  ]).slice(0, questionMax);
 
-const isElementBelowViewport = (el) => {
-  const rect = el.getBoundingClientRect();
-  return rect.bottom > window.innerHeight;
-}
+  return formulaList
+    .map((f, i) =>
+      `<li class="question pl-3" id="question-${i}">` +
+      `<span class="is-size-2 has-text-weight-bold">` +
+      `${replaceOperStr(f)}=<span id="answer-${i}" class="answer" style="display:none;">${safeEval(f)}</span>` +
+      `</span></li>`
+    )
+    .join('\n');
+};
 
-const scrollToCurrentLine = () => {
-  const currentLine = document.querySelector('.current-line');
+// ====================
+// Timer クラス
+// ====================
 
-  if (currentLine && isElementBelowViewport(currentLine)) { // 画面の下にある場合のみスクロール
-    currentLine.scrollIntoView({
-      behavior: 'smooth',
-      block: 'end',
-      inline: 'nearest'
-    });
-  }
-}
-
-const updateCurrentLine = () =>  {
-  const questionLis = document.querySelectorAll('li.question');
-
-   questionLis.forEach(li => {
-    li.classList.remove('current-line');
-  });
-
-  let firstHiddenAnswerLi = null;
-  for (const li of questionLis) {
-    const answer = li.querySelector('.answer');
-    if (answer && answer.style.display === 'none') {
-      firstHiddenAnswerLi = li;
-      break;
-    }
+class Timer {
+  constructor(options) {
+    this.initialSeconds = options.initialSeconds;
+    this.timeLeft = this.initialSeconds;
+    this.intervalId = null;
+    this.onTick = options.onTick || (() => {});
+    this.onComplete = options.onComplete || (() => {});
   }
 
-  if (firstHiddenAnswerLi) {
-    firstHiddenAnswerLi.classList.add('current-line');
-    scrollToCurrentLine()
-  }
-}
-
-let timerInterval;
-let timeLeft = 60 * 2; // 2 min
-const countdownTimer = ()  => {
-  const timerDisplay = document.getElementById('timer');
-  const startButton = document.getElementById('startButton');
-
-  function updateTimerDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    timerDisplay.textContent = `${String(minutes).padStart(1, '0')}:${String(seconds).padStart(2, '0')}`;
+  formatTime() {
+    const minutes = Math.floor(this.timeLeft / 60);
+    const seconds = this.timeLeft % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
   }
 
-  function startTimer() {
-    const content = document.querySelector('.content');
-    content.classList.remove('hide');
-    startButton.disabled = true;
-    clearInterval(timerInterval);
-    updateTimerDisplay();
+  start() {
+    this.stop();
+    this.onTick(this.formatTime());
 
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      updateTimerDisplay();
+    this.intervalId = setInterval(() => {
+      this.timeLeft--;
+      this.onTick(this.formatTime());
 
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        content.classList.add('disabled');
+      if (this.timeLeft <= 0) {
+        this.stop();
+        this.onComplete();
       }
     }, 1000);
   }
 
-  startButton.addEventListener('click', startTimer);
-  updateTimerDisplay();
-}
-
-// 画面タッチ・クリック時にEnterキーをシミュレート
-function enableScreenInteraction() {
-    const targetElement = document.body;
-    if (targetElement) {
-        targetElement.addEventListener('pointerup', function(event) {
-            performDesiredAction(event);
-        });
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
+  }
+
+  reset() {
+    this.stop();
+    this.timeLeft = this.initialSeconds;
+    this.onTick(this.formatTime());
+  }
 }
 
-// Enterキーの押下をシミュレート
-function performDesiredAction() {
-    const enterEvent = new KeyboardEvent('keydown', {
-        key: 'Enter',
-        code: 'Enter',
-        keyCode: 13, // 非推奨だが互換性のため
-        which: 13,   // 非推奨だが互換性のため
-        bubbles: true,
-        cancelable: true
+// ====================
+// UI ヘルパー
+// ====================
+
+/**
+ * 要素が画面外（下）にあるかチェック
+ */
+const isElementBelowViewport = (el) => {
+  const rect = el.getBoundingClientRect();
+  return rect.bottom > window.innerHeight;
+};
+
+/**
+ * 現在の行にスクロール
+ */
+const scrollToCurrentLine = (element) => {
+  if (element && isElementBelowViewport(element)) {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+      inline: 'nearest',
     });
-    if (document.activeElement) {
-        document.activeElement.dispatchEvent(enterEvent);
-    }
-}
+  }
+};
 
-const main = () => {
-  let clickCount = 0;
+// ====================
+// DrillApp クラス
+// ====================
 
-  document.getElementById('formula').innerHTML = generateFormulaList();
-  countdownTimer();
+class DrillApp {
+  constructor() {
+    this.elements = this.cacheElements();
+    this.currentQuestionIndex = 0;
+    this.isStarted = false;
+    this.timer = new Timer({
+      initialSeconds: CONFIG.timer.initialSeconds,
+      onTick: (time) => this.updateTimerDisplay(time),
+      onComplete: () => this.handleTimeUp(),
+    });
+  }
 
-  document.addEventListener('keydown', (event) => {
-    const startButton = document.getElementById('startButton');
-    const isHide = document.querySelector('.content')?.classList.contains('hide');
+  cacheElements() {
+    return {
+      startButton: document.getElementById('startButton'),
+      timerDisplay: document.getElementById('timer'),
+      content: document.querySelector('.content'),
+      formulaContainer: document.getElementById('formula'),
+    };
+  }
 
-    if (event.code === 'Enter') {
-      if (!startButton.disabled && isHide) {
-        document.getElementById('startButton').click();
-      } else if (startButton.disabled) {
-        displayAnswer(`answer${clickCount}`);
-        clickCount++;
-        updateCurrentLine();
+  init() {
+    this.elements.formulaContainer.innerHTML = generateFormulaList();
+    this.updateTimerDisplay(this.timer.formatTime());
+    this.updateCurrentLine();
+    this.bindEvents();
+  }
 
-        // 全問終了判定
-        if (clickCount >= QUESTION_MAX) {
-          clearInterval(timerInterval);
-          setTimeout(() => {
-            window.alert('🎉全問完了しました！お疲れさまでした。🎉');
-            document.querySelector('.content').classList.add('disabled');
-          }, 100); // 少し遅延して最後の答えが表示されるように
-        }
+  bindEvents() {
+    // スタートボタン
+    this.elements.startButton.addEventListener('click', () => this.start());
+
+    // キーボード・タッチ共通のアクション
+    const handleAction = () => {
+      if (!this.isStarted) {
+        this.start();
+      } else {
+        this.showNextAnswer();
       }
+    };
+
+    // キーボードイベント
+    document.addEventListener('keydown', (event) => {
+      if (event.code === 'Enter') {
+        handleAction();
+      }
+    });
+
+    // タッチ・クリックイベント（ボタン以外の領域）
+    document.body.addEventListener('pointerup', (event) => {
+      // ボタンのクリックは除外
+      if (event.target.closest('button')) return;
+      handleAction();
+    });
+  }
+
+  start() {
+    if (this.isStarted) return;
+
+    this.isStarted = true;
+    this.elements.content.classList.remove('hide');
+    this.elements.startButton.disabled = true;
+    this.elements.startButton.setAttribute('aria-disabled', 'true');
+    this.timer.start();
+  }
+
+  showNextAnswer() {
+    if (this.currentQuestionIndex >= CONFIG.formula.questionMax) return;
+
+    const answerElement = document.getElementById(`answer-${this.currentQuestionIndex}`);
+    if (answerElement) {
+      answerElement.style.display = 'inline';
     }
-  });
+
+    this.currentQuestionIndex++;
+    this.updateCurrentLine();
+
+    if (this.currentQuestionIndex >= CONFIG.formula.questionMax) {
+      this.handleComplete();
+    }
+  }
+
+  updateTimerDisplay(time) {
+    this.elements.timerDisplay.textContent = time;
+    this.elements.timerDisplay.setAttribute('aria-label', `残り時間: ${time}`);
+  }
+
+  updateCurrentLine() {
+    const questions = document.querySelectorAll('li.question');
+    questions.forEach((li) => li.classList.remove('current-line'));
+
+    const currentQuestion = document.getElementById(`question-${this.currentQuestionIndex}`);
+    if (currentQuestion) {
+      currentQuestion.classList.add('current-line');
+      currentQuestion.setAttribute('aria-current', 'true');
+      scrollToCurrentLine(currentQuestion);
+    }
+  }
+
+  handleTimeUp() {
+    this.elements.content.classList.add('disabled');
+  }
+
+  handleComplete() {
+    this.timer.stop();
+    setTimeout(() => {
+      window.alert('🎉全問完了しました！お疲れさまでした。🎉');
+      this.elements.content.classList.add('disabled');
+    }, 100);
+  }
 }
+
+// ====================
+// アプリケーション起動
+// ====================
 
 document.addEventListener('DOMContentLoaded', () => {
-  main();
-  updateCurrentLine();
-  enableScreenInteraction();
+  const app = new DrillApp();
+  app.init();
 });
