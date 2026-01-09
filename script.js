@@ -3,7 +3,7 @@
 // ====================
 const CONFIG = {
   timer: {
-    initialSeconds: 120, // 2分
+    initialSeconds: 10, // 2分
   },
   formula: {
     questionMax: 100,
@@ -210,7 +210,7 @@ class DrillApp {
 
   cacheElements() {
     return {
-      startButton: document.getElementById('startButton'),
+      actionButton: document.getElementById('actionButton'),
       timerDisplay: document.getElementById('timer'),
       content: document.querySelector('.content'),
       formulaContainer: document.getElementById('formula'),
@@ -225,8 +225,8 @@ class DrillApp {
   }
 
   bindEvents() {
-    // スタートボタン
-    this.elements.startButton.addEventListener('click', () => this.start());
+    // アクションボタン（START/RETRY トグル）
+    this.elements.actionButton.addEventListener('click', () => this.handleActionButton());
 
     // キーボード・タッチ共通のアクション
     const handleAction = () => {
@@ -239,7 +239,8 @@ class DrillApp {
 
     // キーボードイベント
     document.addEventListener('keydown', (event) => {
-      if (event.code === 'Enter') {
+      if (event.code === 'Enter' || event.code === 'Space') {
+        event.preventDefault();
         handleAction();
       }
     });
@@ -252,14 +253,36 @@ class DrillApp {
     });
   }
 
+  handleActionButton() {
+    if (!this.isStarted) {
+      this.start();
+    } else {
+      this.retry();
+    }
+  }
+
   start() {
     if (this.isStarted) return;
 
     this.isStarted = true;
     this.elements.content.classList.remove('hide');
-    this.elements.startButton.disabled = true;
-    this.elements.startButton.setAttribute('aria-disabled', 'true');
+    this.updateActionButton('retry');
     this.timer.start();
+  }
+
+  updateActionButton(mode) {
+    const button = this.elements.actionButton;
+    if (mode === 'retry') {
+      button.textContent = 'RETRY';
+      button.classList.remove('is-primary');
+      button.classList.add('is-warning');
+      button.setAttribute('aria-label', 'ドリルをやり直す');
+    } else {
+      button.textContent = 'START';
+      button.classList.remove('is-warning');
+      button.classList.add('is-primary');
+      button.setAttribute('aria-label', 'ドリルを開始する');
+    }
   }
 
   showNextAnswer() {
@@ -296,7 +319,36 @@ class DrillApp {
   }
 
   handleTimeUp() {
-    this.elements.content.classList.add('disabled');
+    this.showAllAnswers();
+    setTimeout(() => {
+      window.alert('⏰タイムオーバー！⏰');
+      this.elements.content.classList.add('disabled');
+    }, 100);
+  }
+
+  showAllAnswers() {
+    const answers = document.querySelectorAll('.answer');
+    answers.forEach((answer) => {
+      answer.style.display = 'inline';
+    });
+  }
+
+  retry() {
+    // タイマーをリセット
+    this.timer.reset();
+
+    // 状態をリセット
+    this.currentQuestionIndex = 0;
+    this.isStarted = false;
+
+    // UIをリセット
+    this.elements.content.classList.add('hide');
+    this.elements.content.classList.remove('disabled');
+    this.updateActionButton('start');
+
+    // 新しい問題を生成
+    this.elements.formulaContainer.innerHTML = generateFormulaList();
+    this.updateCurrentLine();
   }
 
   handleComplete() {
