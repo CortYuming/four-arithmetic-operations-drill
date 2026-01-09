@@ -3,7 +3,7 @@
 // ====================
 const CONFIG = {
   timer: {
-    initialSeconds: 10, // 2分
+    initialSeconds: 120, // 2分
   },
   formula: {
     questionMax: 100,
