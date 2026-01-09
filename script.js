@@ -3,7 +3,7 @@
 // ====================
 const CONFIG = {
   timer: {
-    initialSeconds: 120, // 2分
+    initialSeconds: 10, // 2分
   },
   formula: {
     questionMax: 100,
@@ -319,7 +319,18 @@ class DrillApp {
   }
 
   handleTimeUp() {
-    this.elements.content.classList.add('disabled');
+    this.showAllAnswers();
+    setTimeout(() => {
+      window.alert('⏰タイムオーバー！⏰');
+      this.elements.content.classList.add('disabled');
+    }, 100);
+  }
+
+  showAllAnswers() {
+    const answers = document.querySelectorAll('.answer');
+    answers.forEach((answer) => {
+      answer.style.display = 'inline';
+    });
   }
 
   retry() {
