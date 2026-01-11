@@ -1,19 +1,108 @@
 // ====================
-// 設定
+// レベル別設定
 // ====================
-const CONFIG = {
-  timer: {
-    initialSeconds: 120, // 2分
-  },
-  formula: {
+const LEVEL_CONFIGS = {
+  3: {
+    name: '小学3年生',
     questionMax: 100,
-    amount: 34,
-    sum: { min: 1, max: 30 },
-    sub: { min: 1, max: 30 },
-    kuku: { min: 2, max: 10 },
-    div: { min: 2, max: 81 },
+    timer: 120,
+    problems: {
+      sum: { enabled: true, min: 1, max: 30, amount: 34 },
+      sub: { enabled: true, min: 1, max: 30, amount: 34 },
+      mul: { enabled: true, min: 2, max: 9, amount: 22 },
+      div: { enabled: true, min: 2, max: 81, amount: 10 },
+      decimalSum: { enabled: false },
+      decimalSub: { enabled: false },
+      decimalMul: { enabled: false },
+      decimalDiv: { enabled: false },
+      fractionSum: { enabled: false },
+      fractionSub: { enabled: false },
+      fractionMul: { enabled: false },
+      fractionDiv: { enabled: false },
+    },
+  },
+  4: {
+    name: '小学4年生',
+    questionMax: 80,
+    timer: 120,
+    problems: {
+      sum: { enabled: true, min: 10, max: 200, amount: 20 },
+      sub: { enabled: true, min: 10, max: 200, amount: 20 },
+      mul: { enabled: true, min: 2, max: 12, amount: 15 },
+      div: { enabled: true, min: 2, max: 100, amount: 10 },
+      decimalSum: { enabled: true, decimals: 1, min: 0.1, max: 9.9, amount: 8 },
+      decimalSub: { enabled: true, decimals: 1, min: 0.1, max: 9.9, amount: 7 },
+      decimalMul: { enabled: false },
+      decimalDiv: { enabled: false },
+      fractionSum: { enabled: false },
+      fractionSub: { enabled: false },
+      fractionMul: { enabled: false },
+      fractionDiv: { enabled: false },
+    },
+  },
+  5: {
+    name: '小学5年生',
+    questionMax: 60,
+    timer: 120,
+    problems: {
+      sum: { enabled: true, min: 10, max: 100, amount: 10 },
+      sub: { enabled: true, min: 10, max: 100, amount: 10 },
+      mul: { enabled: true, min: 2, max: 12, amount: 8 },
+      div: { enabled: true, min: 2, max: 100, amount: 8 },
+      decimalSum: { enabled: false },
+      decimalSub: { enabled: false },
+      decimalMul: { enabled: true, decimals: 1, min: 0.1, max: 9.9, intMin: 2, intMax: 9, amount: 8 },
+      decimalDiv: { enabled: true, decimals: 1, min: 0.1, max: 9.9, amount: 6 },
+      fractionSum: { enabled: true, maxDenom: 8, amount: 5 },
+      fractionSub: { enabled: true, maxDenom: 8, amount: 5 },
+      fractionMul: { enabled: false },
+      fractionDiv: { enabled: false },
+    },
+  },
+  6: {
+    name: '小学6年生',
+    questionMax: 50,
+    timer: 120,
+    problems: {
+      sum: { enabled: true, min: 10, max: 100, amount: 6 },
+      sub: { enabled: true, min: 10, max: 100, amount: 6 },
+      mul: { enabled: true, min: 2, max: 12, amount: 6 },
+      div: { enabled: true, min: 2, max: 100, amount: 6 },
+      decimalSum: { enabled: false },
+      decimalSub: { enabled: false },
+      decimalMul: { enabled: true, decimals: 2, min: 0.01, max: 9.99, intMin: 2, intMax: 9, amount: 6 },
+      decimalDiv: { enabled: true, decimals: 2, min: 0.01, max: 9.99, amount: 5 },
+      fractionSum: { enabled: false },
+      fractionSub: { enabled: false },
+      fractionMul: { enabled: true, maxDenom: 6, amount: 8 },
+      fractionDiv: { enabled: true, maxDenom: 6, amount: 7 },
+    },
   },
 };
+
+const DEFAULT_LEVEL = 3;
+
+// ====================
+// URLパラメータ管理
+// ====================
+const getLevelFromURL = () => {
+  const params = new URLSearchParams(window.location.search);
+  const level = parseInt(params.get('level'), 10);
+  return LEVEL_CONFIGS[level] ? level : DEFAULT_LEVEL;
+};
+
+const setLevelToURL = (level) => {
+  const url = new URL(window.location);
+  url.searchParams.set('level', level);
+  window.history.pushState({}, '', url);
+};
+
+// ====================
+// 現在の設定を取得
+// ====================
+let currentLevel = getLevelFromURL();
+
+const getConfig = () => LEVEL_CONFIGS[currentLevel];
 
 // ====================
 // ユーティリティ関数
@@ -43,30 +132,92 @@ const shuffle = (array) => {
 };
 
 /**
+ * 最大公約数を求める
+ */
+const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+
+/**
+ * 分数を約分する
+ */
+const reduceFraction = (num, denom) => {
+  const g = gcd(Math.abs(num), Math.abs(denom));
+  return { num: num / g, denom: denom / g };
+};
+
+/**
+ * 小数を指定桁数で丸める
+ */
+const roundDecimal = (value, decimals) => {
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
+};
+
+// ====================
+// 計算関数
+// ====================
+
+/**
  * 四則演算のみ対応の安全な計算関数
  */
 const safeEval = (formula) => {
-  if (!/^\d+[+\-*/]\d+$/.test(formula)) {
+  if (!/^[\d.]+[+\-*/][\d.]+$/.test(formula)) {
     return '';
   }
-  const match = formula.match(/(\d+)([+\-*/])(\d+)/);
+  const match = formula.match(/([\d.]+)([+\-*/])([\d.]+)/);
   if (!match) return '';
 
   const a = Number(match[1]);
   const op = match[2];
   const b = Number(match[3]);
 
+  let result;
   switch (op) {
-    case '+': return a + b;
-    case '-': return a - b;
-    case '*': return a * b;
-    case '/': return b !== 0 ? a / b : '';
+    case '+': result = a + b; break;
+    case '-': result = a - b; break;
+    case '*': result = a * b; break;
+    case '/': result = b !== 0 ? a / b : ''; break;
     default: return '';
   }
+
+  // 小数点以下の桁数を適切に処理
+  if (typeof result === 'number' && !Number.isInteger(result)) {
+    result = roundDecimal(result, 2);
+  }
+  return result;
+};
+
+/**
+ * 分数の計算
+ */
+const calculateFraction = (n1, d1, op, n2, d2) => {
+  let resultNum, resultDenom;
+
+  switch (op) {
+    case '+':
+      resultNum = n1 * d2 + n2 * d1;
+      resultDenom = d1 * d2;
+      break;
+    case '-':
+      resultNum = n1 * d2 - n2 * d1;
+      resultDenom = d1 * d2;
+      break;
+    case '*':
+      resultNum = n1 * n2;
+      resultDenom = d1 * d2;
+      break;
+    case '/':
+      resultNum = n1 * d2;
+      resultDenom = d1 * n2;
+      break;
+    default:
+      return null;
+  }
+
+  return reduceFraction(resultNum, resultDenom);
 };
 
 // ====================
-// 式生成
+// 式生成（整数）
 // ====================
 
 /**
@@ -77,7 +228,7 @@ const createFormula = (min, max, operator, filterFn = () => true) => {
   for (let i = min; i <= max; i++) {
     for (let j = min; j <= max; j++) {
       if (filterFn(i, j)) {
-        result.push(`${i}${operator}${j}`);
+        result.push({ type: 'integer', formula: `${i}${operator}${j}` });
       }
     }
   }
@@ -86,37 +237,282 @@ const createFormula = (min, max, operator, filterFn = () => true) => {
 
 const createSumFormula = (min, max) => createFormula(min, max, '+');
 const createSubFormula = (min, max) => createFormula(min, max, '-', (i, j) => i > j);
-const createKukuFormula = (min, max) => createFormula(min, max, '*');
+const createMulFormula = (min, max) => createFormula(min, max, '*');
 const createDivFormula = (min, max) => {
   const filterFn = (dividend, divisor) =>
     divisor !== 0 && dividend % divisor === 0 && dividend !== divisor;
   return createFormula(min, max, '/', filterFn);
 };
 
+// ====================
+// 式生成（小数）
+// ====================
+
+const createDecimalSumFormula = (config) => {
+  const { decimals, min, max, amount } = config;
+  const result = [];
+  const factor = Math.pow(10, decimals);
+
+  for (let i = 0; i < amount * 3; i++) {
+    const a = roundDecimal(min + Math.random() * (max - min), decimals);
+    const b = roundDecimal(min + Math.random() * (max - min), decimals);
+    result.push({
+      type: 'decimal',
+      formula: `${a}+${b}`,
+      decimals,
+    });
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+const createDecimalSubFormula = (config) => {
+  const { decimals, min, max, amount } = config;
+  const result = [];
+
+  for (let i = 0; i < amount * 3; i++) {
+    let a = roundDecimal(min + Math.random() * (max - min), decimals);
+    let b = roundDecimal(min + Math.random() * (max - min), decimals);
+    if (a < b) [a, b] = [b, a];
+    result.push({
+      type: 'decimal',
+      formula: `${a}-${b}`,
+      decimals,
+    });
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+const createDecimalMulFormula = (config) => {
+  const { decimals, min, max, intMin, intMax, amount } = config;
+  const result = [];
+
+  for (let i = 0; i < amount * 3; i++) {
+    const decimal = roundDecimal(min + Math.random() * (max - min), decimals);
+    const integer = Math.floor(intMin + Math.random() * (intMax - intMin + 1));
+    result.push({
+      type: 'decimal',
+      formula: `${decimal}*${integer}`,
+      decimals,
+    });
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+const createDecimalDivFormula = (config) => {
+  const { decimals, min, max, amount } = config;
+  const result = [];
+
+  // 割り切れる小数の割り算を生成
+  for (let i = 0; i < amount * 5; i++) {
+    const divisor = Math.floor(2 + Math.random() * 8); // 2〜9
+    const quotient = roundDecimal(min + Math.random() * (max - min), decimals);
+    const dividend = roundDecimal(divisor * quotient, decimals + 1);
+
+    if (dividend <= max * 10) {
+      result.push({
+        type: 'decimal',
+        formula: `${dividend}/${divisor}`,
+        decimals,
+      });
+    }
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+// ====================
+// 式生成（分数）
+// ====================
+
+const createFractionSumFormula = (config) => {
+  const { maxDenom, amount } = config;
+  const result = [];
+
+  // 同分母の分数の足し算
+  for (let denom = 2; denom <= maxDenom; denom++) {
+    for (let n1 = 1; n1 < denom; n1++) {
+      for (let n2 = 1; n2 < denom; n2++) {
+        if (n1 + n2 < denom * 2) {
+          result.push({
+            type: 'fraction',
+            op: '+',
+            n1, d1: denom,
+            n2, d2: denom,
+          });
+        }
+      }
+    }
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+const createFractionSubFormula = (config) => {
+  const { maxDenom, amount } = config;
+  const result = [];
+
+  // 同分母の分数の引き算
+  for (let denom = 2; denom <= maxDenom; denom++) {
+    for (let n1 = 2; n1 < denom; n1++) {
+      for (let n2 = 1; n2 < n1; n2++) {
+        result.push({
+          type: 'fraction',
+          op: '-',
+          n1, d1: denom,
+          n2, d2: denom,
+        });
+      }
+    }
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+const createFractionMulFormula = (config) => {
+  const { maxDenom, amount } = config;
+  const result = [];
+
+  // 分数の掛け算
+  for (let d1 = 2; d1 <= maxDenom; d1++) {
+    for (let n1 = 1; n1 < d1; n1++) {
+      for (let d2 = 2; d2 <= maxDenom; d2++) {
+        for (let n2 = 1; n2 < d2; n2++) {
+          // 真分数同士の掛け算
+          result.push({
+            type: 'fraction',
+            op: '*',
+            n1, d1,
+            n2, d2,
+          });
+        }
+      }
+    }
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+const createFractionDivFormula = (config) => {
+  const { maxDenom, amount } = config;
+  const result = [];
+
+  // 分数の割り算
+  for (let d1 = 2; d1 <= maxDenom; d1++) {
+    for (let n1 = 1; n1 < d1; n1++) {
+      for (let d2 = 2; d2 <= maxDenom; d2++) {
+        for (let n2 = 1; n2 < d2; n2++) {
+          result.push({
+            type: 'fraction',
+            op: '/',
+            n1, d1,
+            n2, d2,
+          });
+        }
+      }
+    }
+  }
+  return shuffle(result).slice(0, amount);
+};
+
+// ====================
+// HTML生成
+// ====================
+
 /**
- * 問題リストのHTML生成
+ * 分数のHTML生成
+ */
+const createFractionHTML = (num, denom) => {
+  if (denom === 1) return `<span class="integer">${num}</span>`;
+  return `<span class="fraction"><span class="numerator">${num}</span><span class="denominator">${denom}</span></span>`;
+};
+
+/**
+ * 演算子の全角変換
+ */
+const getOperatorDisplay = (op) => {
+  const operators = { '+': '＋', '-': '－', '*': '×', '/': '÷' };
+  return operators[op] || op;
+};
+
+/**
+ * 問題アイテムのHTML生成
+ */
+const generateQuestionHTML = (item, index) => {
+  let displayFormula, answer;
+
+  if (item.type === 'fraction') {
+    const { op, n1, d1, n2, d2 } = item;
+    displayFormula =
+      createFractionHTML(n1, d1) +
+      `<span class="operator">${getOperatorDisplay(op)}</span>` +
+      createFractionHTML(n2, d2);
+
+    const result = calculateFraction(n1, d1, op, n2, d2);
+    answer = createFractionHTML(result.num, result.denom);
+  } else {
+    displayFormula = `<span>${replaceOperStr(item.formula)}</span>`;
+    answer = `<span>${safeEval(item.formula)}</span>`;
+  }
+
+  return (
+    `<li class="question pl-3" id="question-${index}">` +
+    `<span class="formula-container is-size-2 has-text-weight-bold">` +
+    `${displayFormula}<span class="equals">＝</span>` +
+    `<span id="answer-${index}" class="answer" style="display:none;">${answer}</span>` +
+    `</span></li>`
+  );
+};
+
+/**
+ * 問題リストの生成
  */
 const generateFormulaList = () => {
-  const { sum, sub, kuku, div, amount, questionMax } = CONFIG.formula;
+  const config = getConfig();
+  const { problems, questionMax } = config;
+  let formulaList = [];
 
-  const kukuAmount = Math.floor(amount / 3 * 2);
-  const divAmount = amount - kukuAmount;
+  // 整数の四則演算
+  if (problems.sum.enabled) {
+    formulaList.push(...shuffle(createSumFormula(problems.sum.min, problems.sum.max)).slice(0, problems.sum.amount));
+  }
+  if (problems.sub.enabled) {
+    formulaList.push(...shuffle(createSubFormula(problems.sub.min, problems.sub.max)).slice(0, problems.sub.amount));
+  }
+  if (problems.mul.enabled) {
+    formulaList.push(...shuffle(createMulFormula(problems.mul.min, problems.mul.max)).slice(0, problems.mul.amount));
+  }
+  if (problems.div.enabled) {
+    formulaList.push(...shuffle(createDivFormula(problems.div.min, problems.div.max)).slice(0, problems.div.amount));
+  }
 
-  const formulaList = shuffle([
-    ...shuffle(createSumFormula(sum.min, sum.max)).slice(0, amount),
-    ...createSubFormula(sub.min, sub.max).slice(0, amount),
-    ...shuffle(createKukuFormula(kuku.min, kuku.max)).slice(0, kukuAmount),
-    ...shuffle(createDivFormula(div.min, div.max)).slice(0, divAmount),
-  ]).slice(0, questionMax);
+  // 小数の計算
+  if (problems.decimalSum.enabled) {
+    formulaList.push(...createDecimalSumFormula(problems.decimalSum));
+  }
+  if (problems.decimalSub.enabled) {
+    formulaList.push(...createDecimalSubFormula(problems.decimalSub));
+  }
+  if (problems.decimalMul.enabled) {
+    formulaList.push(...createDecimalMulFormula(problems.decimalMul));
+  }
+  if (problems.decimalDiv.enabled) {
+    formulaList.push(...createDecimalDivFormula(problems.decimalDiv));
+  }
 
-  return formulaList
-    .map((f, i) =>
-      `<li class="question pl-3" id="question-${i}">` +
-      `<span class="is-size-2 has-text-weight-bold">` +
-      `${replaceOperStr(f)}=<span id="answer-${i}" class="answer" style="display:none;">${safeEval(f)}</span>` +
-      `</span></li>`
-    )
-    .join('\n');
+  // 分数の計算
+  if (problems.fractionSum.enabled) {
+    formulaList.push(...createFractionSumFormula(problems.fractionSum));
+  }
+  if (problems.fractionSub.enabled) {
+    formulaList.push(...createFractionSubFormula(problems.fractionSub));
+  }
+  if (problems.fractionMul.enabled) {
+    formulaList.push(...createFractionMulFormula(problems.fractionMul));
+  }
+  if (problems.fractionDiv.enabled) {
+    formulaList.push(...createFractionDivFormula(problems.fractionDiv));
+  }
+
+  // シャッフルして問題数を制限
+  formulaList = shuffle(formulaList).slice(0, questionMax);
+
+  return formulaList.map((item, i) => generateQuestionHTML(item, i)).join('\n');
 };
 
 // ====================
@@ -202,7 +598,7 @@ class DrillApp {
     this.currentQuestionIndex = 0;
     this.isStarted = false;
     this.timer = new Timer({
-      initialSeconds: CONFIG.timer.initialSeconds,
+      initialSeconds: getConfig().timer,
       onTick: (time) => this.updateTimerDisplay(time),
       onComplete: () => this.handleTimeUp(),
     });
@@ -214,6 +610,7 @@ class DrillApp {
       timerDisplay: document.getElementById('timer'),
       content: document.querySelector('.content'),
       formulaContainer: document.getElementById('formula'),
+      levelSelect: document.getElementById('levelSelect'),
     };
   }
 
@@ -221,12 +618,24 @@ class DrillApp {
     this.elements.formulaContainer.innerHTML = generateFormulaList();
     this.updateTimerDisplay(this.timer.formatTime());
     this.updateCurrentLine();
+    this.updateLevelSelect();
     this.bindEvents();
+  }
+
+  updateLevelSelect() {
+    if (this.elements.levelSelect) {
+      this.elements.levelSelect.value = currentLevel;
+    }
   }
 
   bindEvents() {
     // アクションボタン（START/RETRY トグル）
     this.elements.actionButton.addEventListener('click', () => this.handleActionButton());
+
+    // レベル選択
+    if (this.elements.levelSelect) {
+      this.elements.levelSelect.addEventListener('change', (e) => this.handleLevelChange(e));
+    }
 
     // キーボード・タッチ共通のアクション
     const handleAction = () => {
@@ -247,10 +656,42 @@ class DrillApp {
 
     // タッチ・クリックイベント（ボタン以外の領域）
     document.body.addEventListener('pointerup', (event) => {
-      // ボタンのクリックは除外
-      if (event.target.closest('button')) return;
+      // ボタンやセレクトボックスのクリックは除外
+      if (event.target.closest('button') || event.target.closest('select')) return;
       handleAction();
     });
+  }
+
+  handleLevelChange(event) {
+    const newLevel = parseInt(event.target.value, 10);
+    if (LEVEL_CONFIGS[newLevel]) {
+      currentLevel = newLevel;
+      setLevelToURL(newLevel);
+      this.resetForNewLevel();
+    }
+  }
+
+  resetForNewLevel() {
+    // タイマーを新しい設定でリセット
+    this.timer = new Timer({
+      initialSeconds: getConfig().timer,
+      onTick: (time) => this.updateTimerDisplay(time),
+      onComplete: () => this.handleTimeUp(),
+    });
+
+    // 状態をリセット
+    this.currentQuestionIndex = 0;
+    this.isStarted = false;
+
+    // UIをリセット
+    this.elements.content.classList.add('hide');
+    this.elements.content.classList.remove('disabled');
+    this.updateActionButton('start');
+    this.updateTimerDisplay(this.timer.formatTime());
+
+    // 新しい問題を生成
+    this.elements.formulaContainer.innerHTML = generateFormulaList();
+    this.updateCurrentLine();
   }
 
   handleActionButton() {
@@ -286,7 +727,8 @@ class DrillApp {
   }
 
   showNextAnswer() {
-    if (this.currentQuestionIndex >= CONFIG.formula.questionMax) return;
+    const config = getConfig();
+    if (this.currentQuestionIndex >= config.questionMax) return;
 
     const answerElement = document.getElementById(`answer-${this.currentQuestionIndex}`);
     if (answerElement) {
@@ -296,7 +738,7 @@ class DrillApp {
     this.currentQuestionIndex++;
     this.updateCurrentLine();
 
-    if (this.currentQuestionIndex >= CONFIG.formula.questionMax) {
+    if (this.currentQuestionIndex >= config.questionMax) {
       this.handleComplete();
     }
   }
@@ -353,8 +795,9 @@ class DrillApp {
 
   handleComplete() {
     this.timer.stop();
+    const config = getConfig();
     setTimeout(() => {
-      window.alert('🎉全問完了しました！お疲れさまでした。🎉');
+      window.alert(`🎉全${config.questionMax}問完了しました！お疲れさまでした。🎉`);
       this.elements.content.classList.add('disabled');
     }, 100);
   }
