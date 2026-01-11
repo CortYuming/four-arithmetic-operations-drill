@@ -8,6 +8,13 @@
 }
 
 /* ====================
+   固定ナビバー対応
+   ==================== */
+body {
+  padding-top: 1.5rem;
+}
+
+/* ====================
    現在の問題行ハイライト
    ==================== */
 .current-line {
@@ -39,4 +46,49 @@
    ==================== */
 .content.hide {
   display: none;
+}
+
+/* ====================
+   分数表示
+   ==================== */
+.fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.2em;
+  font-size: 0.6em;
+  line-height: 1.2;
+}
+
+.fraction .numerator {
+  border-bottom: 2px solid currentColor;
+  padding: 0 0.3em 0.1em;
+}
+
+.fraction .denominator {
+  padding: 0.1em 0.3em 0;
+}
+
+/* ====================
+   数式コンテナ
+   ==================== */
+.formula-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.1em;
+}
+
+.formula-container .operator {
+  margin: 0 0.2em;
+}
+
+.formula-container .equals {
+  margin: 0 0.2em;
+}
+
+.formula-container .integer {
+  display: inline-block;
+  vertical-align: middle;
 }
