@@ -321,7 +321,7 @@ class DrillApp {
   handleTimeUp() {
     this.showAllAnswers();
     setTimeout(() => {
-      window.alert('⏰タイムオーバー！⏰');
+      window.alert(`🌟よくがんばりました！🌟\n${this.currentQuestionIndex}問解けました！`);
       this.elements.content.classList.add('disabled');
     }, 100);
   }
