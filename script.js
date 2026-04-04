@@ -42,7 +42,7 @@ const LEVEL_CONFIGS = {
   },
   5: {
     name: '小学5年生',
-    questionMax: 10,
+    questionMax: 13,
     timer: 120,
     problems: {
       sum: { enabled: true, min: 10, max: 100, amount: 3 },
@@ -61,7 +61,7 @@ const LEVEL_CONFIGS = {
   },
   6: {
     name: '小学6年生',
-    questionMax: 7,
+    questionMax: 9,
     timer: 120,
     problems: {
       sum: { enabled: true, min: 10, max: 100, amount: 2 },
