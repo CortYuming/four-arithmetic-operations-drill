@@ -109,14 +109,18 @@ const getConfig = () => LEVEL_CONFIGS[currentLevel];
 // ====================
 
 /**
- * 演算子を全角文字に変換
+ * 演算子の全角変換
+ */
+const getOperatorDisplay = (op) => {
+  const operators = { '+': '＋', '-': '－', '*': '×', '/': '÷' };
+  return operators[op] || op;
+};
+
+/**
+ * 式中の演算子を全角文字に変換
  */
 const replaceOperStr = (formula) => {
-  return formula
-    .replace(/\+/g, '＋')
-    .replace(/-/g, '－')
-    .replace(/\*/g, '×')
-    .replace(/\//g, '÷');
+  return formula.replace(/[+\-*/]/g, (op) => getOperatorDisplay(op));
 };
 
 /**
@@ -251,7 +255,6 @@ const createDivFormula = (min, max) => {
 const createDecimalSumFormula = (config) => {
   const { decimals, min, max, amount } = config;
   const result = [];
-  const factor = Math.pow(10, decimals);
 
   for (let i = 0; i < amount * 3; i++) {
     const a = roundDecimal(min + Math.random() * (max - min), decimals);
@@ -420,14 +423,6 @@ const createFractionDivFormula = (config) => {
 const createFractionHTML = (num, denom) => {
   if (denom === 1) return `<span class="integer">${num}</span>`;
   return `<span class="fraction"><span class="numerator">${num}</span><span class="denominator">${denom}</span></span>`;
-};
-
-/**
- * 演算子の全角変換
- */
-const getOperatorDisplay = (op) => {
-  const operators = { '+': '＋', '-': '－', '*': '×', '/': '÷' };
-  return operators[op] || op;
 };
 
 /**
