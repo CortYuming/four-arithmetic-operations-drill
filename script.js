@@ -59,6 +59,25 @@ const LEVEL_CONFIGS = {
       fractionDiv: { enabled: false },
     },
   },
+  51: {
+    name: '小5小数問題',
+    questionMax: 15,
+    timer: 120,
+    problems: {
+      sum: { enabled: false },
+      sub: { enabled: false },
+      mul: { enabled: false },
+      div: { enabled: false },
+      decimalSum: { enabled: true, forceColumn: true, intMin: 1, intMax: 99, amount: 4 },
+      decimalSub: { enabled: true, forceColumn: true, intMin: 1, intMax: 99, amount: 4 },
+      decimalMul: { enabled: true, forceColumn: true, decimalIntMin: 1, decimalIntMax: 99, intMin: 2, intMax: 9, amount: 4 },
+      decimalDiv: { enabled: true, forceColumn: true, amount: 3 },
+      fractionSum: { enabled: false },
+      fractionSub: { enabled: false },
+      fractionMul: { enabled: false },
+      fractionDiv: { enabled: false },
+    },
+  },
   6: {
     name: '小学6年生',
     questionMax: 11,
@@ -252,60 +271,117 @@ const createDivFormula = (min, max) => {
 // 式生成（小数）
 // ====================
 
+/**
+ * 筆算強制モード用：整数部1-2桁＋小数部1または2桁の数値を生成
+ * 片方は1桁、片方は2桁になるようにして桁ズレを必ず作る
+ */
+const generateColumnPair = (intMin, intMax) => {
+  const intA = Math.floor(intMin + Math.random() * (intMax - intMin + 1));
+  const intB = Math.floor(intMin + Math.random() * (intMax - intMin + 1));
+  const fracA = Math.floor(1 + Math.random() * 9) / 10;
+  const fracB = Math.floor(10 + Math.random() * 90) / 100;
+  const a = roundDecimal(intA + fracA, 1);
+  const b = roundDecimal(intB + fracB, 2);
+  return Math.random() < 0.5 ? [a, b] : [b, a];
+};
+
 const createDecimalSumFormula = (config) => {
-  const { decimals, min, max, amount } = config;
+  const { decimals, min, max, amount, forceColumn, intMin, intMax } = config;
   const result = [];
 
   for (let i = 0; i < amount * 3; i++) {
-    const a = roundDecimal(min + Math.random() * (max - min), decimals);
-    const b = roundDecimal(min + Math.random() * (max - min), decimals);
+    let a, b;
+    if (forceColumn) {
+      [a, b] = generateColumnPair(intMin, intMax);
+    } else {
+      a = roundDecimal(min + Math.random() * (max - min), decimals);
+      b = roundDecimal(min + Math.random() * (max - min), decimals);
+    }
     result.push({
       type: 'decimal',
       formula: `${a}+${b}`,
-      decimals,
+      decimals: forceColumn ? 2 : decimals,
     });
   }
   return shuffle(result).slice(0, amount);
 };
 
 const createDecimalSubFormula = (config) => {
-  const { decimals, min, max, amount } = config;
+  const { decimals, min, max, amount, forceColumn, intMin, intMax } = config;
   const result = [];
 
   for (let i = 0; i < amount * 3; i++) {
-    let a = roundDecimal(min + Math.random() * (max - min), decimals);
-    let b = roundDecimal(min + Math.random() * (max - min), decimals);
+    let a, b;
+    if (forceColumn) {
+      [a, b] = generateColumnPair(intMin, intMax);
+    } else {
+      a = roundDecimal(min + Math.random() * (max - min), decimals);
+      b = roundDecimal(min + Math.random() * (max - min), decimals);
+    }
     if (a < b) [a, b] = [b, a];
     result.push({
       type: 'decimal',
       formula: `${a}-${b}`,
-      decimals,
+      decimals: forceColumn ? 2 : decimals,
     });
   }
   return shuffle(result).slice(0, amount);
 };
 
 const createDecimalMulFormula = (config) => {
-  const { decimals, min, max, intMin, intMax, amount } = config;
+  const { decimals, min, max, intMin, intMax, amount, forceColumn, decimalIntMin, decimalIntMax } = config;
   const result = [];
 
   for (let i = 0; i < amount * 3; i++) {
-    const decimal = roundDecimal(min + Math.random() * (max - min), decimals);
+    let decimal;
+    let decimalPlaces;
+    if (forceColumn) {
+      // 小数側：整数部 decimalIntMin〜decimalIntMax、小数部1または2桁ランダム
+      const intPart = Math.floor(decimalIntMin + Math.random() * (decimalIntMax - decimalIntMin + 1));
+      decimalPlaces = Math.random() < 0.5 ? 1 : 2;
+      const fracPart = decimalPlaces === 1
+        ? Math.floor(1 + Math.random() * 9) / 10
+        : Math.floor(10 + Math.random() * 90) / 100;
+      decimal = roundDecimal(intPart + fracPart, 2);
+    } else {
+      decimal = roundDecimal(min + Math.random() * (max - min), decimals);
+      decimalPlaces = decimals;
+    }
     const integer = Math.floor(intMin + Math.random() * (intMax - intMin + 1));
     result.push({
       type: 'decimal',
       formula: `${decimal}*${integer}`,
-      decimals,
+      decimals: decimalPlaces,
     });
   }
   return shuffle(result).slice(0, amount);
 };
 
 const createDecimalDivFormula = (config) => {
-  const { decimals, min, max, amount } = config;
+  const { decimals, min, max, amount, forceColumn } = config;
   const result = [];
 
-  // 割り切れる小数の割り算を生成
+  if (forceColumn) {
+    // 筆算強制：被除数を2桁以上の小数（整数部1-2桁＋小数1-2桁）、除数を1桁整数2-9、割り切れる
+    for (let i = 0; i < amount * 15; i++) {
+      const divisor = Math.floor(2 + Math.random() * 8);
+      const qDec = Math.random() < 0.5 ? 1 : 2;
+      const quotient = qDec === 1
+        ? Math.floor(1 + Math.random() * 99) / 10
+        : Math.floor(10 + Math.random() * 990) / 100;
+      const dividend = roundDecimal(divisor * quotient, qDec);
+      if (dividend > 1 && dividend < 100 && dividend !== Math.floor(dividend)) {
+        result.push({
+          type: 'decimal',
+          formula: `${dividend}/${divisor}`,
+          decimals: 2,
+        });
+      }
+    }
+    return shuffle(result).slice(0, amount);
+  }
+
+  // 既存ロジック：割り切れる小数の割り算を生成
   for (let i = 0; i < amount * 5; i++) {
     const divisor = Math.floor(2 + Math.random() * 8); // 2〜9
     const quotient = roundDecimal(min + Math.random() * (max - min), decimals);
