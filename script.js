@@ -5,7 +5,6 @@ const LEVEL_CONFIGS = {
   3: {
     name: '小学3年生',
     questionMax: 100,
-    timer: 120,
     problems: {
       sum: { enabled: true, min: 1, max: 30, amount: 34 },
       sub: { enabled: true, min: 1, max: 30, amount: 34 },
@@ -24,7 +23,6 @@ const LEVEL_CONFIGS = {
   4: {
     name: '小学4年生',
     questionMax: 20,
-    timer: 120,
     problems: {
       sum: { enabled: true, min: 10, max: 200, amount: 20 },
       sub: { enabled: true, min: 10, max: 200, amount: 20 },
@@ -43,7 +41,6 @@ const LEVEL_CONFIGS = {
   5: {
     name: '小学5年生',
     questionMax: 15,
-    timer: 120,
     problems: {
       sum: { enabled: true, min: 10, max: 100, amount: 3 },
       sub: { enabled: true, min: 10, max: 100, amount: 3 },
@@ -62,7 +59,6 @@ const LEVEL_CONFIGS = {
   51: {
     name: '小5小数問題',
     questionMax: 15,
-    timer: 120,
     problems: {
       sum: { enabled: false },
       sub: { enabled: false },
@@ -81,7 +77,6 @@ const LEVEL_CONFIGS = {
   6: {
     name: '小学6年生',
     questionMax: 11,
-    timer: 120,
     problems: {
       sum: { enabled: true, min: 10, max: 100, amount: 2 },
       sub: { enabled: true, min: 10, max: 100, amount: 2 },
@@ -101,6 +96,11 @@ const LEVEL_CONFIGS = {
 
 const DEFAULT_LEVEL = 3;
 
+// タイマー設定（分）
+const DEFAULT_TIMER_MINUTES = 2;
+const MIN_TIMER_MINUTES = 2;
+const MAX_TIMER_MINUTES = 15;
+
 // ====================
 // URLパラメータ管理
 // ====================
@@ -116,12 +116,29 @@ const setLevelToURL = (level) => {
   window.history.pushState({}, '', url);
 };
 
+const getTimeFromURL = () => {
+  const params = new URLSearchParams(window.location.search);
+  const minutes = parseInt(params.get('time'), 10);
+  if (Number.isNaN(minutes) || minutes < MIN_TIMER_MINUTES || minutes > MAX_TIMER_MINUTES) {
+    return DEFAULT_TIMER_MINUTES;
+  }
+  return minutes;
+};
+
+const setTimeToURL = (minutes) => {
+  const url = new URL(window.location);
+  url.searchParams.set('time', minutes);
+  window.history.pushState({}, '', url);
+};
+
 // ====================
 // 現在の設定を取得
 // ====================
 let currentLevel = getLevelFromURL();
+let currentTimerMinutes = getTimeFromURL();
 
 const getConfig = () => LEVEL_CONFIGS[currentLevel];
+const getTimerSeconds = () => currentTimerMinutes * 60;
 
 // ====================
 // ユーティリティ関数
@@ -669,7 +686,7 @@ class DrillApp {
     this.currentQuestionIndex = 0;
     this.isStarted = false;
     this.timer = new Timer({
-      initialSeconds: getConfig().timer,
+      initialSeconds: getTimerSeconds(),
       onTick: (time) => this.updateTimerDisplay(time),
       onComplete: () => this.handleTimeUp(),
     });
@@ -682,6 +699,7 @@ class DrillApp {
       content: document.querySelector('.content'),
       formulaContainer: document.getElementById('formula'),
       levelSelect: document.getElementById('levelSelect'),
+      timeSelect: document.getElementById('timeSelect'),
     };
   }
 
@@ -690,12 +708,19 @@ class DrillApp {
     this.updateTimerDisplay(this.timer.formatTime());
     this.updateCurrentLine();
     this.updateLevelSelect();
+    this.updateTimeSelect();
     this.bindEvents();
   }
 
   updateLevelSelect() {
     if (this.elements.levelSelect) {
       this.elements.levelSelect.value = currentLevel;
+    }
+  }
+
+  updateTimeSelect() {
+    if (this.elements.timeSelect) {
+      this.elements.timeSelect.value = currentTimerMinutes;
     }
   }
 
@@ -706,6 +731,11 @@ class DrillApp {
     // レベル選択
     if (this.elements.levelSelect) {
       this.elements.levelSelect.addEventListener('change', (e) => this.handleLevelChange(e));
+    }
+
+    // 制限時間選択
+    if (this.elements.timeSelect) {
+      this.elements.timeSelect.addEventListener('change', (e) => this.handleTimeChange(e));
     }
 
     // キーボード・タッチ共通のアクション
@@ -742,10 +772,19 @@ class DrillApp {
     }
   }
 
+  handleTimeChange(event) {
+    const newMinutes = parseInt(event.target.value, 10);
+    if (!Number.isNaN(newMinutes) && newMinutes >= MIN_TIMER_MINUTES && newMinutes <= MAX_TIMER_MINUTES) {
+      currentTimerMinutes = newMinutes;
+      setTimeToURL(newMinutes);
+      this.resetForNewLevel();
+    }
+  }
+
   resetForNewLevel() {
     // タイマーを新しい設定でリセット
     this.timer = new Timer({
-      initialSeconds: getConfig().timer,
+      initialSeconds: getTimerSeconds(),
       onTick: (time) => this.updateTimerDisplay(time),
       onComplete: () => this.handleTimeUp(),
     });
