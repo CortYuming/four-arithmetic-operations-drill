@@ -3,7 +3,7 @@
 // ====================
 const LEVEL_CONFIGS = {
   3: {
-    name: '小学3年生',
+    name: '小3',
     questionMax: 100,
     problems: {
       sum: { enabled: true, min: 1, max: 30, amount: 34 },
@@ -21,7 +21,7 @@ const LEVEL_CONFIGS = {
     },
   },
   4: {
-    name: '小学4年生',
+    name: '小4',
     questionMax: 20,
     problems: {
       sum: { enabled: true, min: 10, max: 200, amount: 20 },
@@ -39,7 +39,7 @@ const LEVEL_CONFIGS = {
     },
   },
   5: {
-    name: '小学5年生',
+    name: '小5',
     questionMax: 15,
     problems: {
       sum: { enabled: true, min: 10, max: 100, amount: 3 },
@@ -57,7 +57,7 @@ const LEVEL_CONFIGS = {
     },
   },
   51: {
-    name: '小5小数問題',
+    name: '小5小数',
     questionMax: 15,
     problems: {
       sum: { enabled: false },
@@ -74,8 +74,26 @@ const LEVEL_CONFIGS = {
       fractionDiv: { enabled: false },
     },
   },
+  52: {
+    name: '小5小数わり算',
+    questionMax: 8,
+    problems: {
+      sum: { enabled: false },
+      sub: { enabled: false },
+      mul: { enabled: false },
+      div: { enabled: false },
+      decimalSum: { enabled: false },
+      decimalSub: { enabled: false },
+      decimalMul: { enabled: false },
+      decimalDiv: { enabled: true, decimalDivisor: true, amount: 8 },
+      fractionSum: { enabled: false },
+      fractionSub: { enabled: false },
+      fractionMul: { enabled: false },
+      fractionDiv: { enabled: false },
+    },
+  },
   6: {
-    name: '小学6年生',
+    name: '小6',
     questionMax: 11,
     problems: {
       sum: { enabled: true, min: 10, max: 100, amount: 2 },
@@ -375,8 +393,35 @@ const createDecimalMulFormula = (config) => {
 };
 
 const createDecimalDivFormula = (config) => {
-  const { decimals, min, max, amount, forceColumn } = config;
+  const { decimals, min, max, amount, forceColumn, decimalDivisor } = config;
   const result = [];
+
+  if (decimalDivisor) {
+    // 小数÷小数：除数は小数1桁または2桁、商は整数または小数1桁、割り切れる
+    // 除数は小数点移動後が2桁以内になる範囲に限定（小5の筆算負荷に合わせる）
+    for (let i = 0; i < amount * 40; i++) {
+      // 除数2桁は移動後2桁以内＝純小数に限られるため、偏らないよう3割に抑える
+      const dDec = Math.random() < 0.3 ? 2 : 1;
+      const divisor = dDec === 1
+        ? Math.floor(2 + Math.random() * 98) / 10 // 0.2〜9.9（移動後 2〜99）
+        : Math.floor(11 + Math.random() * 89) / 100; // 0.11〜0.99（移動後 11〜99）
+      const quotient = Math.random() < 0.5
+        ? Math.floor(2 + Math.random() * 98) // 整数 2〜99
+        : Math.floor(2 + Math.random() * 98) / 10; // 小数1桁 0.2〜9.9
+      const raw = divisor * quotient;
+      const dividend = roundDecimal(raw, 2);
+      // 被除数は小数2桁以内で割り切れること（整数だと「整数÷小数」になるので除外）
+      if (Math.abs(dividend - raw) > 1e-9) continue;
+      if (dividend > 0.1 && dividend < 100 && dividend !== Math.floor(dividend)) {
+        result.push({
+          type: 'decimal',
+          formula: `${dividend}/${divisor}`,
+          decimals: 2,
+        });
+      }
+    }
+    return shuffle(result).slice(0, amount);
+  }
 
   if (forceColumn) {
     // 筆算強制：被除数を2桁以上の小数（整数部1-2桁＋小数1-2桁）、除数を1桁整数2-9、割り切れる
