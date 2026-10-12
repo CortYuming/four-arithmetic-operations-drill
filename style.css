@@ -70,6 +70,16 @@ body {
   padding: 0.1em 0.3em 0;
 }
 
+/* 帯分数：整数部と分数を詰めて1つの数に見せる */
+.mixed {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mixed .fraction {
+  margin-left: 0.05em;
+}
+
 /* ====================
    数式コンテナ
    ==================== */

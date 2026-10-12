@@ -18,6 +18,7 @@ const LEVEL_CONFIGS = {
       fractionSub: { enabled: false },
       fractionMul: { enabled: false },
       fractionDiv: { enabled: false },
+      mixedFraction: { enabled: false },
     },
   },
   4: {
@@ -36,6 +37,7 @@ const LEVEL_CONFIGS = {
       fractionSub: { enabled: false },
       fractionMul: { enabled: false },
       fractionDiv: { enabled: false },
+      mixedFraction: { enabled: false },
     },
   },
   5: {
@@ -54,6 +56,7 @@ const LEVEL_CONFIGS = {
       fractionSub: { enabled: true, maxDenom: 8, amount: 9 },
       fractionMul: { enabled: false },
       fractionDiv: { enabled: false },
+      mixedFraction: { enabled: false },
     },
   },
   51: {
@@ -72,6 +75,7 @@ const LEVEL_CONFIGS = {
       fractionSub: { enabled: false },
       fractionMul: { enabled: false },
       fractionDiv: { enabled: false },
+      mixedFraction: { enabled: false },
     },
   },
   52: {
@@ -90,6 +94,26 @@ const LEVEL_CONFIGS = {
       fractionSub: { enabled: false },
       fractionMul: { enabled: false },
       fractionDiv: { enabled: false },
+      mixedFraction: { enabled: false },
+    },
+  },
+  53: {
+    name: '小5分数',
+    questionMax: 4,
+    problems: {
+      sum: { enabled: false },
+      sub: { enabled: false },
+      mul: { enabled: false },
+      div: { enabled: false },
+      decimalSum: { enabled: false },
+      decimalSub: { enabled: false },
+      decimalMul: { enabled: false },
+      decimalDiv: { enabled: false },
+      fractionSum: { enabled: false },
+      fractionSub: { enabled: false },
+      fractionMul: { enabled: false },
+      fractionDiv: { enabled: false },
+      mixedFraction: { enabled: true, wholeMax: 4, maxDenom: 15, maxLcm: 60, amount: 4 },
     },
   },
   6: {
@@ -108,6 +132,7 @@ const LEVEL_CONFIGS = {
       fractionSub: { enabled: false },
       fractionMul: { enabled: true, maxDenom: 6, amount: 12 },
       fractionDiv: { enabled: true, maxDenom: 6, amount: 11 },
+      mixedFraction: { enabled: false },
     },
   },
 };
@@ -551,6 +576,43 @@ const createFractionDivFormula = (config) => {
   return shuffle(result).slice(0, amount);
 };
 
+/**
+ * 異分母の帯分数の足し算・引き算（通分・繰り上げ/繰り下げ・約分）
+ * 分母は互いに倍数でない組み合わせに限定し、必ず通分が必要になるようにする
+ * 足し算か引き算かは1問ごとにランダム
+ */
+const createMixedFractionFormula = (config) => {
+  const { wholeMax, maxDenom, maxLcm, amount } = config;
+  const result = [];
+
+  for (let d1 = 2; d1 <= maxDenom; d1++) {
+    for (let d2 = 2; d2 <= maxDenom; d2++) {
+      if (d1 % d2 === 0 || d2 % d1 === 0) continue;
+      if ((d1 * d2) / gcd(d1, d2) > maxLcm) continue;
+      for (let n1 = 1; n1 < d1; n1++) {
+        if (gcd(n1, d1) !== 1) continue;
+        for (let n2 = 1; n2 < d2; n2++) {
+          if (gcd(n2, d2) !== 1) continue;
+          const op = Math.random() < 0.5 ? '+' : '-';
+          let a = { w: 1 + Math.floor(Math.random() * wholeMax), n: n1, d: d1 };
+          let b = { w: 1 + Math.floor(Math.random() * wholeMax), n: n2, d: d2 };
+          // 引き算は答えが正になるよう大きい方を前にする（分母が違うので等しくはならない）
+          if (op === '-' && (a.w * a.d + a.n) * b.d < (b.w * b.d + b.n) * a.d) {
+            [a, b] = [b, a];
+          }
+          result.push({
+            type: 'mixedFraction',
+            op,
+            w1: a.w, n1: a.n, d1: a.d,
+            w2: b.w, n2: b.n, d2: b.d,
+          });
+        }
+      }
+    }
+  }
+  return shuffle(result).slice(0, amount);
+};
+
 // ====================
 // HTML生成
 // ====================
@@ -561,6 +623,17 @@ const createFractionDivFormula = (config) => {
 const createFractionHTML = (num, denom) => {
   if (denom === 1) return `<span class="integer">${num}</span>`;
   return `<span class="fraction"><span class="numerator">${num}</span><span class="denominator">${denom}</span></span>`;
+};
+
+/**
+ * 帯分数のHTML生成（仮分数は帯分数に直す）
+ */
+const createMixedFractionHTML = (num, denom) => {
+  const whole = Math.floor(num / denom);
+  const rest = num % denom;
+  if (rest === 0) return `<span class="integer">${whole}</span>`;
+  if (whole === 0) return createFractionHTML(rest, denom);
+  return `<span class="mixed"><span class="integer">${whole}</span>${createFractionHTML(rest, denom)}</span>`;
 };
 
 /**
@@ -578,6 +651,17 @@ const generateQuestionHTML = (item, index) => {
 
     const result = calculateFraction(n1, d1, op, n2, d2);
     answer = createFractionHTML(result.num, result.denom);
+  } else if (item.type === 'mixedFraction') {
+    const { op, w1, n1, d1, w2, n2, d2 } = item;
+    const i1 = w1 * d1 + n1;
+    const i2 = w2 * d2 + n2;
+    displayFormula =
+      createMixedFractionHTML(i1, d1) +
+      `<span class="operator">${getOperatorDisplay(op)}</span>` +
+      createMixedFractionHTML(i2, d2);
+
+    const result = calculateFraction(i1, d1, op, i2, d2);
+    answer = createMixedFractionHTML(result.num, result.denom);
   } else {
     displayFormula = `<span>${replaceOperStr(item.formula)}</span>`;
     answer = `<span>${safeEval(item.formula)}</span>`;
@@ -640,6 +724,10 @@ const generateFormulaList = () => {
   }
   if (problems.fractionDiv.enabled) {
     formulaList.push(...createFractionDivFormula(problems.fractionDiv));
+  }
+
+  if (problems.mixedFraction.enabled) {
+    formulaList.push(...createMixedFractionFormula(problems.mixedFraction));
   }
 
   // シャッフルして問題数を制限
